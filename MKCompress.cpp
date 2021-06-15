@@ -3,14 +3,22 @@
 
 #include <iostream>
 
-using namespace bit7z;
-using namespace std;
+#include <qlist.h>
 
+using namespace bit7z;  
+using namespace std;
 
 MKCompress::MKCompress(QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
+
+    init();
+
+    /* connect(ui.fileChoose, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
+        qDebug() << "test";
+    });
+    */
 
     /*
     try {
@@ -44,3 +52,101 @@ MKCompress::MKCompress(QWidget *parent)
     }
     */
 }
+
+void MKCompress::init()
+{
+    fileListData = new QStringList();
+
+    ui.fileListView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // connect
+
+    connect(
+        ui.fileChoose, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
+            CFileDialog fileDialog;
+            if (fileDialog.exec() == QDialog::Accepted)
+            {
+                for each (QString element in fileDialog.selectedFiles().toList())
+                {
+                    if (fileListData->indexOf(element) == -1) {
+
+                        fileListData->append(element);
+                    }
+                }
+                flushData();
+            }
+        }
+    );
+
+    connect(ui.fileListView, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(custumContextMenu(const QPoint&)));
+
+}
+
+void MKCompress::flushData()
+{
+    ui.fileListView->clear();
+    ui.fileListView->addItems(*fileListData);
+}
+
+void MKCompress::custumContextMenu(const QPoint& pos)
+{
+    QListWidgetItem* curItem = ui.fileListView->itemAt(pos);
+    if (curItem == NULL)
+        return;
+
+    QMenu* popMenu = new QMenu(this);
+    QAction* deleteSeed = new QAction(tr("Delete"), this);
+    QAction* clearSeeds = new QAction(tr("Clear"), this);
+    popMenu->addAction(deleteSeed);
+    popMenu->addAction(clearSeeds);
+    connect(deleteSeed, SIGNAL(triggered()), this, SLOT(deleteSeedSlot()));
+    connect(clearSeeds, SIGNAL(triggered()), this, SLOT(clearSeedsSlot()));
+    popMenu->exec(QCursor::pos());
+    delete popMenu;
+    delete deleteSeed;
+    delete clearSeeds;
+}
+
+void MKCompress::deleteSeedSlot()
+{
+    int ch = QMessageBox::warning(NULL, "Warning",
+        "Are you sure to delete?",
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+
+    if (ch != QMessageBox::Yes)
+        return;
+
+    QListWidgetItem* item = ui.fileListView->currentItem();
+    if (item == NULL)
+        return;
+
+    int curIndex = ui.fileListView->row(item);
+
+    fileListData->takeAt(fileListData->indexOf(item->text()));
+    ui.fileListView->takeItem(curIndex);
+    delete item;
+    flushData();
+}
+
+void MKCompress::clearSeedsSlot()
+{
+    int ch = QMessageBox::warning(NULL, "Warning",
+        "Are you sure to clear this list?",
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No);
+
+    if (ch != QMessageBox::Yes)
+        return;
+
+    QListWidgetItem* item = ui.fileListView->currentItem();
+    if (item == NULL)
+        return;
+
+    ui.fileListView->clear();
+    fileListData->clear();
+    delete item;
+    flushData();
+}
+
+

@@ -46,10 +46,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CFileDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="mkcompress_en.ts">
       <Filter>Translation Files</Filter>
     </QtTranslation>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="CFileDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

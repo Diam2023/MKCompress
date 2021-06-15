@@ -109,8 +109,10 @@
     <QtRcc Include="MKCompress.qrc" />
     <QtUic Include="MKCompress.ui" />
     <QtMoc Include="MKCompress.h" />
+    <ClCompile Include="CFileDialog.cpp" />
     <ClCompile Include="MKCompress.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtMoc Include="CFileDialog.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>

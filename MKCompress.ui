@@ -44,7 +44,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QListView" name="fileContentListView"/>
+           <widget class="QListWidget" name="fileListView"/>
           </item>
          </layout>
         </item>

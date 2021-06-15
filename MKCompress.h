@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include <qtranslator.h>
 #include "ui_MKCompress.h"
 
 class MKCompress : public QMainWindow
@@ -10,6 +9,15 @@ class MKCompress : public QMainWindow
 
 public:
     MKCompress(QWidget *parent = Q_NULLPTR);
+
 private:
     Ui::MKCompressClass ui;
+    QStringList* fileListData;
+    void init();
+    void flushData();
+
+private slots:
+    void custumContextMenu(const QPoint& pos);
+    void deleteSeedSlot();
+    void clearSeedsSlot();
 };
