@@ -43,4 +43,18 @@ extern "C" __declspec(dllimport) FileErrEnum _changeHeaderBack(const string& fil
 /// <returns>hex string</returns>
 extern "C" __declspec(dllimport) void _bytesToHexString(char* bytes, int bytelength);
 
+/// <summary>
+/// get mkc file origin head
+/// </summary>
+/// <param name="file"></param>
+/// <returns></returns>
+extern "C" __declspec(dllimport) char* _getMKFileHeader(const string & file);
+
+/// <summary>
+/// get file head
+/// </summary>
+/// <param name="file">file path</param>
+/// <returns>a hex head</returns>
+extern "C" __declspec(dllimport) char* _getFileHeader(const string & file);
+
 #endif // !MKCTDLL

@@ -60,4 +60,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.MD">
+      <Filter>Translation Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

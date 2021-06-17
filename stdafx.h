@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <QtWidgets>
 #include <qtranslator.h>
 #include <qdebug.h>
