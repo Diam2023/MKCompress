@@ -35,9 +35,12 @@ private:
 
     const std::byte SEVENZ_HEAD[4] { std::byte{0x37}, std::byte{0x7a}, std::byte{0xbc}, std::byte{0xaf} };
 
-    QStringList* fileListData;
+    // auto fileListData;
+    std::unique_ptr<QStringList, std::default_delete<QStringList>> fileListData;
+
     QString outputFileName;
     QString outputFilePath;
+    
     bool isChangeHead;
     bool isCompress;
     bool isEncryption;

@@ -38,7 +38,7 @@ char* MKCompress::getCharsSEVENZ_HEAD() {
 void MKCompress::init()
 {
 	// init fileListData
-	fileListData = new QStringList();
+	fileListData = std::make_unique<QStringList>();
 
 	// to solve add menu
 	ui.fileListView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -46,6 +46,8 @@ void MKCompress::init()
 	flushData();
 
 	connect(ui.openAction, SIGNAL(triggered()), this, SLOT(openDialog()));
+
+	connect(ui.exitAction, SIGNAL(triggered()), qApp, SLOT(exit()));
 
 	connect(ui.fileChoose, SIGNAL(clicked(bool)), this, SLOT(openDialog()));
 
@@ -112,13 +114,13 @@ void MKCompress::init()
 
 	connect(
 		ui.startAction, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
-			if (outputFileName = ui.outPutFileNameContent->text(), password = ui.passwordContent->text();  !fileListData->isEmpty() && outputFilePath != "") {
-				if (decompress && fileListData->size() == 1) {
-					launchDecompress(fileListData->at(0), outputFilePath, password);
+			if (outputFileName = ui.outPutFileNameContent->text(), password = ui.passwordContent->text();  !fileListData.get()->isEmpty() && outputFilePath != "") {
+				if (decompress && fileListData.get()->size() == 1) {
+					launchDecompress(fileListData.get()->at(0), outputFilePath, password);
 					return;
 				}
 				else if (outputFileName != "") {
-					launchCompress(*fileListData, outputFilePath + "/" + outputFileName, ui.isCompress->isChecked(), password);
+					launchCompress(*fileListData.get(), outputFilePath + "/" + outputFileName, ui.isCompress->isChecked(), password);
 					return;
 				}
 			}
@@ -136,10 +138,10 @@ void MKCompress::flushData()
 	// clear file view
 	ui.fileListView->clear();
 	// add file data to file view
-	ui.fileListView->addItems(*fileListData);
+	ui.fileListView->addItems(*fileListData.get());
 	// initialize save path
-	if (!fileListData->isEmpty()) {
-		QFileInfo* file = new QFileInfo(fileListData->at(0));
+	if (!fileListData.get()->isEmpty()) {
+		QFileInfo* file = new QFileInfo(fileListData.get()->at(0));
 		// get file parent path
 		if (ui.outputPathContent->text() == "") {
 			QString parentPath = file->absolutePath();
@@ -156,12 +158,12 @@ void MKCompress::flushData()
 	}
 	ui.outputContent->clear();
 	ui.isChangeHead->setChecked(true);
-	if (!fileListData->isEmpty()) {
-		QString fileName = fileListData->at(0);
+	if (!fileListData.get()->isEmpty()) {
+		QString fileName = fileListData.get()->at(0);
 		auto fileInfo = std::make_unique<QFileInfo>(fileName);
 		wchar_t* file = _wcsdup(fileName.toStdWString().c_str());
 		// if file is .mkc
-		if ((fileListData->size() == 1) && fileInfo.get()->isFile() && (*_getFileHeader(file) == *getCharsMKC_HEAD())) {
+		if ((fileListData.get()->size() == 1) && fileInfo.get()->isFile() && (*_getFileHeader(file) == *getCharsMKC_HEAD())) {
 			ui.outputContent->append(tr("已识别到MKC文件 \n"));
 			ui.outputContent->append(tr("还原模式 \n"));
 			// decompress mode
@@ -262,6 +264,8 @@ void MKCompress::launchCompress(QStringList inputFiles, QString outputFile, bool
 		}
 	}
 	catch (const BitException& ex) {
+		// synchronize to conslot
+		qDebug() << ex.what();
 		ui.outputContent->append(ex.what());
 	}
 }
@@ -295,14 +299,16 @@ void MKCompress::launchDecompress(QString inputFile, QString outputPath, QString
 					ui.outputContent->append("action successful \n");
 				}
 			}
+			ui.outputContent->append(tr("decomrpess action successful \n"));
 		}
-		if (result == 0) {
+		if (result != 0) {
 			ui.outputContent->append("change header error");
 			ui.outputContent->append(tr("return value: " + result));
 		}
-
 	}
 	catch (const BitException& ex) {
+		// synchronize to conslot
+		qDebug() << ex.what();
 		ui.outputContent->append(ex.what());
 	}
 	free(file);
@@ -341,7 +347,7 @@ void MKCompress::deleteSeedSlot()
 
 	int curIndex = ui.fileListView->row(item);
 
-	fileListData->takeAt(fileListData->indexOf(item->text()));
+	fileListData.get()->takeAt(fileListData.get()->indexOf(item->text()));
 	ui.fileListView->takeItem(curIndex);
 
 
@@ -364,7 +370,7 @@ void MKCompress::clearSeedsSlot()
 		return;
 
 	ui.fileListView->clear();
-	fileListData->clear();
+	fileListData.get()->clear();
 	flushData();
 }
 
@@ -375,8 +381,8 @@ void MKCompress::openDialog()
 	{
 		for each (QString element in fileDialog.selectedFiles().toList())
 		{
-			if (fileListData->indexOf(element) == -1) {
-				fileListData->append(element);
+			if (fileListData.get()->indexOf(element) == -1) {
+				fileListData.get()->append(element);
 			}
 		}
 		flushData();
