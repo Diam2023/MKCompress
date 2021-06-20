@@ -31,8 +31,10 @@ public:
 private:
     Ui::MKCompressClass ui;
 
+    // mkc type header
     const std::byte MKC_HEAD[4] { std::byte{0x20}, std::byte{0x15}, std::byte{0x12}, std::byte{0x27} };
 
+    // 7z header (only use 4 byte)
     const std::byte SEVENZ_HEAD[4] { std::byte{0x37}, std::byte{0x7a}, std::byte{0xbc}, std::byte{0xaf} };
 
     // auto fileListData;
