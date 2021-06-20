@@ -1,12 +1,8 @@
 #include "MKCompress.h"
-#include "stdafx.h"
-
-#include <iostream>
-
-#include <qlist.h>
+#include "MKCTDLL.hpp"
+#include "CFileDialog.h"
 
 using namespace bit7z;
-using namespace std;
 
 MKCompress::MKCompress(QWidget* parent)
 	: QMainWindow(parent)
@@ -14,6 +10,26 @@ MKCompress::MKCompress(QWidget* parent)
 	ui.setupUi(this);
 
 	init();
+}
+
+char* MKCompress::getCharsMKC_HEAD() {
+	static char data[4];
+	int i = 0;
+	for each (std::byte item in MKC_HEAD)
+	{
+		data[i++] = std::to_integer<char>(item);
+	}
+	return data;
+}
+
+char* MKCompress::getCharsSEVENZ_HEAD() {
+	static char data[4];
+	int i = 0;
+	for each (std::byte item in SEVENZ_HEAD)
+	{
+		data[i++] = std::to_integer<char>(item);
+	}
+	return data;
 }
 
 /// <summary>
@@ -29,24 +45,9 @@ void MKCompress::init()
 
 	flushData();
 
-	flushView(false);
+	connect(ui.openAction, SIGNAL(triggered()), this, SLOT(openDialog()));
 
-	connect(
-		ui.fileChoose, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
-			CFileDialog fileDialog;
-			if (fileDialog.exec() == QDialog::Accepted)
-			{
-				for each (QString element in fileDialog.selectedFiles().toList())
-				{
-					if (fileListData->indexOf(element) == -1) {
-
-						fileListData->append(element);
-					}
-				}
-				flushData();
-			}
-		}
-	);
+	connect(ui.fileChoose, SIGNAL(clicked(bool)), this, SLOT(openDialog()));
 
 	connect(ui.fileListView, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(custumContextMenu(const QPoint&)));
 
@@ -63,9 +64,51 @@ void MKCompress::init()
 		}
 	);
 
-	connect(ui.isChangeHead, SIGNAL(toggled(bool)), this, SLOT(flushView(bool)));
-	connect(ui.isCompress, SIGNAL(toggled(bool)), this, SLOT(flushView(bool)));
-	connect(ui.isEncryption, SIGNAL(toggled(bool)), this, SLOT(flushView(bool)));
+	connect(
+		ui.isChangeHead, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
+			if (!decompress) {
+				ui.isCompress->setEnabled(false);
+				ui.isCompress->setCheckable(true);
+			}
+			else {
+				if (decompressable) {
+					ui.isCompress->setEnabled(true);
+				}
+			}
+		}
+	);
+
+	connect(
+		ui.isCompress, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
+			if (!decompress) {
+				ui.isCompress->setText(tr("压缩"));
+				ui.isEncryption->setText(tr("加密"));
+				ui.isEncryption->setChecked(false);
+				ui.isEncryption->setEnabled(ui.isCompress->isChecked());
+			}
+			else {
+				ui.isCompress->setText(tr("解压"));
+				ui.isEncryption->setText(tr("解密"));
+				ui.outPutFileNameContent->setText("");
+				ui.outPutFileNameContent->setEnabled(false);
+				if (decompressable && ui.isCompress->isChecked()) {
+					ui.isEncryption->setEnabled(true);
+					ui.isEncryption->setChecked(true);
+				}
+				else {
+					ui.isEncryption->setEnabled(false);
+					ui.isEncryption->setChecked(false);
+				}
+			}
+			flushData();
+		}
+	);
+	connect(
+		ui.isEncryption, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
+			ui.passwordContent->setText("");
+			ui.passwordContent->setEnabled(ui.isEncryption->isChecked());
+		}
+	);
 
 	connect(
 		ui.startAction, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
@@ -79,7 +122,7 @@ void MKCompress::init()
 					return;
 				}
 			}
-			ui.outputContent->append("input or output option error!");
+			ui.outputContent->append(tr("input or output option error!"));
 		}
 	);
 
@@ -103,7 +146,7 @@ void MKCompress::flushData()
 			ui.outputPathContent->setText(parentPath);
 			outputFilePath = parentPath;
 		}
-		if (ui.outPutFileNameContent->text() == "") {
+		if (!decompress && ui.isCompress->isChecked() && ui.outPutFileNameContent->text() == "") {
 			QString fileName = file->baseName() + DEFAULT_TYPE;
 			ui.outPutFileNameContent->setText(fileName);
 			outputFileName = fileName;
@@ -115,122 +158,154 @@ void MKCompress::flushData()
 	ui.isChangeHead->setChecked(true);
 	if (!fileListData->isEmpty()) {
 		QString fileName = fileListData->at(0);
-		QFileInfo file(fileName);
+		auto fileInfo = std::make_unique<QFileInfo>(fileName);
+		wchar_t* file = _wcsdup(fileName.toStdWString().c_str());
 		// if file is .mkc
-		if ((fileListData->size() == 1) && file.isFile() && (*_getFileHeader(fileName.toStdString()) == *MK_HEAD)) {
-			ui.outputContent->append("The file to be extracted has been identified \n");
-			ui.outputContent->append("decpompress mode \n");
+		if ((fileListData->size() == 1) && fileInfo.get()->isFile() && (*_getFileHeader(file) == *getCharsMKC_HEAD())) {
+			ui.outputContent->append(tr("已识别到MKC文件 \n"));
+			ui.outputContent->append(tr("还原模式 \n"));
 			// decompress mode
+			decompressable = (*_getMKFileHeader(file) == *getCharsSEVENZ_HEAD());
+			decompress = true;
+
 			ui.isChangeHead->setEnabled(false);
-			ui.isCompress->setEnabled(false);
-			if (*_getMKFileHeader(fileName.toStdString()) == *SEVENZ_HEAD) {
+			ui.isChangeHead->setChecked(true);
+			if (decompressable) {
+				ui.outputContent->append(tr("已识别到7z文件，可进行解压 \n"));
+				ui.isCompress->setEnabled(true);
 				ui.isCompress->setChecked(true);
+				ui.isEncryption->setEnabled(true);
+				ui.isEncryption->setChecked(false);
 			}
 			else {
+				ui.isCompress->setEnabled(false);
 				ui.isCompress->setChecked(false);
+				ui.isEncryption->setEnabled(false);
+				ui.isEncryption->setChecked(false);
 			}
-			ui.outPutFileNameContent->setEnabled(false);
-			ui.outPutFileNameContent->setText("");
-			decompress = true;
 		}
 		else {
-			ui.outputContent->append("compress mode \n");
+			ui.outputContent->append(tr("压缩模式 \n"));
 			// compress mode
+			ui.outPutFileNameContent->setEnabled(true);
 			ui.isChangeHead->setEnabled(true);
-			ui.isCompress->setEnabled(true);
+			ui.isChangeHead->setChecked(true);
 			ui.isCompress->setChecked(true);
+			ui.isCompress->setEnabled(false);
+			ui.isEncryption->setChecked(false);
+			ui.passwordContent->setEnabled(false);
+			// flag
 			decompress = false;
 		}
+		free(file);
+		fileInfo.release();
 	}
 	else {
-		ui.outputContent->append("please choose file \n");
-		// init
-		ui.isChangeHead->setEnabled(true);
+		ui.outputContent->append(tr("请选择文件 \n"));
+		// init check box
+		ui.isChangeHead->setChecked(true);
+		ui.isCompress->setChecked(false);
 		ui.isCompress->setEnabled(false);
+		ui.isEncryption->setChecked(false);
 		ui.isEncryption->setEnabled(false);
+		ui.passwordContent->setEnabled(false);
+		decompress = false;
 	}
 }
 
 void MKCompress::launchCompress(QStringList inputFiles, QString outputFile, bool isCompress, QString pwd)
 {
-	ui.outputContent->append("Compress message:");
-	ui.outputContent->append("|- Compress file list:");
-	ui.outputContent->append("|- Output file path:" + outputFile);
-	ui.outputContent->append("|- Password:" + pwd);
-	try {
-		Bit7zLibrary lib{ L"7za.dll" };
-		BitCompressor compressor{ lib, BitFormat::SevenZip };
-		if (pwd != "") {
-			compressor.setPassword(pwd.toStdWString());
-		}
-		compressor.setUpdateMode(true);
-		for each (QString element in inputFiles.toList())
-		{
-			QFileInfo file(element);
-			if (file.isDir()) {
-				compressor.compressDirectory(element.toStdWString(), outputFile.toStdWString());
-			}
-			else if (file.isFile()) {
-				compressor.compressFile(element.toStdWString(), outputFile.toStdWString());
-			}
-			else {
-				ui.outputContent->append("|- ignor:" + element);
-			}
-			ui.outputContent->append("  |- " + element);
-		}
+	ui.outputContent->append(tr("Compress message:"));
+	ui.outputContent->append(tr("|- Compress file list:"));
+	ui.outputContent->append(tr("|- Output file path:") + outputFile);
+	ui.outputContent->append(tr("|- Password:") + pwd);
 
-		if (_changeHeaderTo(outputFile.toStdString()) == FileErrEnum::NO_ERR) {
-			ui.outputContent->append("change header successful");
+	try {
+		if (ui.isCompress->isChecked()) {
+			Bit7zLibrary lib{ L"7za.dll" };
+			BitCompressor compressor{ lib, BitFormat::SevenZip };
+			if (pwd != "") {
+				compressor.setPassword(pwd.toStdWString());
+			}
+			compressor.setUpdateMode(true);
+			for each (QString element in inputFiles.toList())
+			{
+				QFileInfo file(element);
+				if (file.isDir()) {
+					compressor.compressDirectory(element.toStdWString(), outputFile.toStdWString());
+				}
+				else if (file.isFile()) {
+					compressor.compressFile(element.toStdWString(), outputFile.toStdWString());
+				}
+				else {
+					ui.outputContent->append(tr("|- ignor:") + element);
+				}
+				ui.outputContent->append(tr("  |- ") + element);
+			}
+			ui.outputContent->append(tr("comrpess action successful \n"));
 		}
 		else {
-			ui.outputContent->append("change header error");
+			outputFile = inputFiles.at(0);
+		}
+		if (ui.isChangeHead->isChecked()) {
+			wchar_t* file = _wcsdup(outputFile.toStdWString().c_str());
+			int result = static_cast<int>(_changeHeaderTo(file));
+			if (result == 0) {
+				ui.outputContent->append(tr("change header successful"));
+			}
+			else {
+				ui.outputContent->append(tr("change header error"));
+				ui.outputContent->append(tr("return value: " + result));
+			}
+			ui.outputContent->append(tr("change head to action successful \n"));
+			free(file);
 		}
 	}
 	catch (const BitException& ex) {
 		ui.outputContent->append(ex.what());
 	}
-
 }
 
 void MKCompress::launchDecompress(QString inputFile, QString outputPath, QString pwd)
 {
 	ui.outputContent->append("Decompress message:");
 	ui.outputContent->append("|- Decompress file:" + inputFile);
-	ui.outputContent->append("|- Output file path:" + outputFilePath);
+	ui.outputContent->append("|- Output file path:" + ui.outputPathContent->text());
 	ui.outputContent->append("|- Password:" + pwd);
 
-	// _changeHeaderTo(inputFile.toStdString());
-
+	wchar_t* file = _wcsdup(inputFile.toStdWString().c_str());
 	try {
-		Bit7zLibrary lib{ L"7za.dll" };
-		BitArchiveInfo arc{ lib, inputFile.toStdWString(), BitFormat::SevenZip };
-		//printing archive metadata
-		qDebug() << "Archive properties";
-		qDebug() << " Items count: " << arc.itemsCount();
-		qDebug() << " Folders count: " << arc.foldersCount();
-		qDebug() << " Files count: " << arc.filesCount();
-		qDebug() << " Size: " << arc.size();
-		qDebug() << " Packed size: " << arc.packSize();
-		qDebug() << "test output";
+		// change head back
+		int result = static_cast<int>(_changeHeaderBack(file));
+		if (result == 0) {
+			ui.outputContent->append("change header successful");
 
-		//printing archive items metadata
-		qDebug() << "Archive items";
-		auto arc_items = arc.items();
-		for (auto& item : arc_items) {
-			qDebug() << " Item index: " << item.index();
-			qDebug() << "  Name: " << item.name();
-			qDebug() << "  Extension: " << item.extension();
-			qDebug() << "  Path: " << item.path();
-			qDebug() << "  IsDir: " << item.isDir();
-			qDebug() << "  Size: " << item.size();
-			qDebug() << "  Packed size: " << item.packSize();
+			if (ui.isCompress->isChecked()) {
+				Bit7zLibrary lib{ L"7za.dll" };
+				BitExtractor extractor{ lib, BitFormat::SevenZip };
+				if (pwd != "") {
+					extractor.setPassword(pwd.toStdWString());
+				}
+				extractor.extract(inputFile.toStdWString(), outputPath.toStdWString());
+			}
+			if (!ui.isCompress->isChecked()) {
+				// change head to
+				result = static_cast<int>(_changeHeaderTo(file));
+				if (result == 0) {
+					ui.outputContent->append("action successful \n");
+				}
+			}
 		}
+		if (result == 0) {
+			ui.outputContent->append("change header error");
+			ui.outputContent->append(tr("return value: " + result));
+		}
+
 	}
 	catch (const BitException& ex) {
-		qDebug() << ex.what();
 		ui.outputContent->append(ex.what());
 	}
-
+	free(file);
 }
 
 void MKCompress::custumContextMenu(const QPoint& pos)
@@ -239,17 +314,15 @@ void MKCompress::custumContextMenu(const QPoint& pos)
 	if (curItem == NULL)
 		return;
 
-	QMenu* popMenu = new QMenu(this);
-	QAction* deleteSeed = new QAction(tr("Delete"), this);
-	QAction* clearSeeds = new QAction(tr("Clear"), this);
-	popMenu->addAction(deleteSeed);
-	popMenu->addAction(clearSeeds);
-	connect(deleteSeed, SIGNAL(triggered()), this, SLOT(deleteSeedSlot()));
-	connect(clearSeeds, SIGNAL(triggered()), this, SLOT(clearSeedsSlot()));
+	auto popMenu = std::make_unique<QMenu>(this);
+	auto deleteSeed = std::make_unique<QAction>(tr("Delete"), this);
+	auto clearSeeds = std::make_unique<QAction>(tr("Clear"), this);
+
+	popMenu.get()->addAction(deleteSeed.get());
+	popMenu.get()->addAction(clearSeeds.get());
+	connect(deleteSeed.get(), SIGNAL(triggered()), this, SLOT(deleteSeedSlot()));
+	connect(clearSeeds.get(), SIGNAL(triggered()), this, SLOT(clearSeedsSlot()));
 	popMenu->exec(QCursor::pos());
-	delete popMenu;
-	delete deleteSeed;
-	delete clearSeeds;
 }
 
 void MKCompress::deleteSeedSlot()
@@ -270,6 +343,8 @@ void MKCompress::deleteSeedSlot()
 
 	fileListData->takeAt(fileListData->indexOf(item->text()));
 	ui.fileListView->takeItem(curIndex);
+
+
 	delete item;
 	flushData();
 }
@@ -293,52 +368,17 @@ void MKCompress::clearSeedsSlot()
 	flushData();
 }
 
-void MKCompress::flushView(bool check)
+void MKCompress::openDialog()
 {
-	/*
-	if (ui.isChangeHead->isEnabled()) {
-		if (ui.isChangeHead->isChecked()) {
-			ui.isChangeHead->setEnabled(true);
-			if (fileListData->size() > 1) {
-				ui.isChangeHead->setEnabled(true);
-				ui.isChangeHead->setChecked(true);
-				ui.isCompress->setEnabled(true);
-				ui.isCompress->setChecked(true);
-			}
-			if (ui.isCompress->isEnabled()) {
-				if (ui.isCompress->isChecked()) {
-					ui.isEncryption->setEnabled(true);
-				}
-				else {
-					ui.isEncryption->setEnabled(false);
-					ui.isEncryption->setChecked(false);
-				}
-			}
-			else {
-				ui.isCompress->setEnabled(true);
+	CFileDialog fileDialog;
+	if (fileDialog.exec() == QDialog::Accepted)
+	{
+		for each (QString element in fileDialog.selectedFiles().toList())
+		{
+			if (fileListData->indexOf(element) == -1) {
+				fileListData->append(element);
 			}
 		}
-		else {
-			ui.isCompress->setEnabled(false);
-			ui.isCompress->setChecked(false);
-			ui.isEncryption->setEnabled(false);
-			ui.isEncryption->setChecked(false);
-		}
+		flushData();
 	}
-	else {
-		if (!fileListData->isEmpty()) {
-			ui.isChangeHead->setEnabled(true);
-		}
-		else {
-			ui.isChangeHead->setEnabled(false);
-			ui.isChangeHead->setChecked(false);
-		}
-	}
-	if (ui.isEncryption->isEnabled() && ui.isEncryption->isChecked()) {
-		ui.passwordContent->setEnabled(true);
-	}
-	else {
-		ui.passwordContent->setEnabled(false);
-	}
-	*/
 }

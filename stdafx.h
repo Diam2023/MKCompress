@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include <QtWidgets>
 #include <qtranslator.h>
 #include <qdebug.h>
@@ -10,6 +8,5 @@
 #include "bitarchiveinfo.hpp"
 #include "bitcompressor.hpp"
 
-#include "MKCTDLL.h"
-
-#include "CFileDialog.h"
+#include <iostream>
+#include <qlist.h>

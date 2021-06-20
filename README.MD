@@ -1,10 +1,20 @@
 # MKCompress project
 
 evn
-- VS2019 msvc2019 
-- QT linguist and desingner v6.2.0
+ - VS2019 msvc2019 x64
+ - QT linguist and desingner v6.2.0
 
 # change head and use 7z to compress files
 use bit7z and MKCY(miku change head tools)
-- bit7z https://github.com/rikyoz/bit7z
-- MKCT https://github.com/monoliths-uni/MKCT
+ - bit7z https://github.com/rikyoz/bit7z
+ - MKCT https://github.com/monoliths-uni/MKCT
+
+
+now bug list(bug will be erase on next version):
+ - can not compress use chinese name fluter
+
+# bug list
+ - can not use UTF-8 to change head
+
+# verion
+ - 0.1

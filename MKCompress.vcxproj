@@ -62,12 +62,16 @@
     <ClCompile>
       <AdditionalIncludeDirectories>C:\Users\monoliths\Documents\project\MKCompress\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\monoliths\Documents\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>bit7z64_d.lib;bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>bit7z64_d.lib bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <QtTranslation>
+      <BuildAction>false</BuildAction>
+    </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -118,9 +122,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <QtTranslation Include="mkcompress_en.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.MD" />
