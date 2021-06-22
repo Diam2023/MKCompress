@@ -12,6 +12,13 @@ MKCompress::MKCompress(QWidget* parent)
 	init();
 }
 
+MKCompress::~MKCompress() {
+
+	delete fileListData.release();
+	fileListData = NULL;
+
+}
+
 char* MKCompress::getCharsMKC_HEAD() {
 	static char data[4];
 	int i = 0;
@@ -38,7 +45,7 @@ char* MKCompress::getCharsSEVENZ_HEAD() {
 void MKCompress::init()
 {
 	// init fileListData
-	fileListData = std::make_unique<QStringList>();
+	// fileListData = new std::vector<QString>();
 
 	// to solve add menu
 	ui.fileListView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -55,7 +62,7 @@ void MKCompress::init()
 
 	connect(
 		ui.outputPathChoose, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
-			QString filePath = QFileDialog::getExistingDirectory(this, "Choose output path", "./");
+			QString filePath = QFileDialog::getExistingDirectory(this, tr("选择输出路径"), tr("/"));
 			if (filePath.isEmpty())
 			{
 				return;
@@ -114,17 +121,17 @@ void MKCompress::init()
 
 	connect(
 		ui.startAction, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
-			if (outputFileName = ui.outPutFileNameContent->text(), password = ui.passwordContent->text();  !fileListData.get()->isEmpty() && outputFilePath != "") {
-				if (decompress && fileListData.get()->size() == 1) {
-					launchDecompress(fileListData.get()->at(0), outputFilePath, password);
+			if (outputFileName = ui.outPutFileNameContent->text(), password = ui.passwordContent->text();  !fileListData->empty() && outputFilePath != "") {
+				if (decompress && fileListData->size() == 1) {
+					launchDecompress(fileListData->at(0), outputFilePath, password);
 					return;
 				}
 				else if (outputFileName != "") {
-					launchCompress(*fileListData.get(), outputFilePath + "/" + outputFileName, ui.isCompress->isChecked(), password);
+					launchCompress(outputFilePath + tr("/") + outputFileName, ui.isCompress->isChecked(), password);
 					return;
 				}
 			}
-			ui.outputContent->append(tr("input or output option error!"));
+			ui.outputContent->append(tr("输入文件无效、输出路径或输出文件名错误!"));
 		}
 	);
 
@@ -138,36 +145,35 @@ void MKCompress::flushData()
 	// clear file view
 	ui.fileListView->clear();
 	// add file data to file view
-	ui.fileListView->addItems(*fileListData.get());
+	for (auto iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
+	{
+		ui.fileListView->addItem(*iterator);
+	}
 	// initialize save path
-	if (!fileListData.get()->isEmpty()) {
-		QFileInfo* file = new QFileInfo(fileListData.get()->at(0));
+
+	if (!fileListData->empty()) {
+		auto file = std::make_unique<QFileInfo>(fileListData->at(0));
 		// get file parent path
 		if (ui.outputPathContent->text() == "") {
 			QString parentPath = file->absolutePath();
 			ui.outputPathContent->setText(parentPath);
 			outputFilePath = parentPath;
 		}
-		if (!decompress && ui.isCompress->isChecked() && ui.outPutFileNameContent->text() == "") {
+		if (!decompress && (ui.isChangeHead->isChecked() || ui.isCompress->isChecked()) && ui.outPutFileNameContent->text() == "") {
 			QString fileName = file->baseName() + DEFAULT_TYPE;
 			ui.outPutFileNameContent->setText(fileName);
 			outputFileName = fileName;
 		}
 		// free space
-		delete file;
-	}
-	ui.outputContent->clear();
-	ui.isChangeHead->setChecked(true);
-	if (!fileListData.get()->isEmpty()) {
-		QString fileName = fileListData.get()->at(0);
-		auto fileInfo = std::make_unique<QFileInfo>(fileName);
-		wchar_t* file = _wcsdup(fileName.toStdWString().c_str());
+		ui.outputContent->clear();
+		ui.isChangeHead->setChecked(true);
 		// if file is .mkc
-		if ((fileListData.get()->size() == 1) && fileInfo.get()->isFile() && (*_getFileHeader(file) == *getCharsMKC_HEAD())) {
+		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(fileListData->at(0).utf16());
+		if ((fileListData->size() == 1) && file->isFile() && (*_getFileHeader(fileWString) == *getCharsMKC_HEAD())) {
 			ui.outputContent->append(tr("已识别到MKC文件 \n"));
 			ui.outputContent->append(tr("还原模式 \n"));
 			// decompress mode
-			decompressable = (*_getMKFileHeader(file) == *getCharsSEVENZ_HEAD());
+			decompressable = (*_getMKFileHeader(fileWString) == *getCharsSEVENZ_HEAD());
 			decompress = true;
 
 			ui.isChangeHead->setEnabled(false);
@@ -199,8 +205,9 @@ void MKCompress::flushData()
 			// flag
 			decompress = false;
 		}
-		free(file);
-		fileInfo.release();
+
+		delete file.release();
+		file = NULL;
 	}
 	else {
 		ui.outputContent->append(tr("请选择文件 \n"));
@@ -215,52 +222,80 @@ void MKCompress::flushData()
 	}
 }
 
-void MKCompress::launchCompress(QStringList inputFiles, QString outputFile, bool isCompress, QString pwd)
+void MKCompress::launchCompress(QString outputFile, bool isCompress, QString pwd)
 {
 	ui.outputContent->append(tr("Compress message:"));
 	ui.outputContent->append(tr("|- Compress file list:"));
 	ui.outputContent->append(tr("|- Output file path:") + outputFile);
-	ui.outputContent->append(tr("|- Password:") + pwd);
 
 	try {
 		if (ui.isCompress->isChecked()) {
 			Bit7zLibrary lib{ L"7za.dll" };
-			BitCompressor compressor{ lib, BitFormat::SevenZip };
+
+			auto compressor = std::make_unique<BitCompressor>(lib, BitFormat::SevenZip);
 			if (pwd != "") {
-				compressor.setPassword(pwd.toStdWString());
+				const wstring password = std::wstring(reinterpret_cast<const wchar_t*>(pwd.utf16()));
+				compressor->setPassword(password);
+				ui.outputContent->append(tr("|- Password:") + pwd);
 			}
-			compressor.setUpdateMode(true);
-			for each (QString element in inputFiles.toList())
+			compressor->setUpdateMode(true);
+
+			for (auto iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
 			{
-				QFileInfo file(element);
-				if (file.isDir()) {
-					compressor.compressDirectory(element.toStdWString(), outputFile.toStdWString());
+				auto element = *iterator;
+				auto file = std::make_unique<QFileInfo>(element);
+
+				const wstring inputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(iterator->utf16()));
+				const wstring outputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(outputFile.utf16()));
+
+				if (file->isDir()) {
+					compressor->compressDirectory(inputFileWString, outputFileWString);
 				}
-				else if (file.isFile()) {
-					compressor.compressFile(element.toStdWString(), outputFile.toStdWString());
+				else if (file->isFile()) {
+					compressor->compressFile(inputFileWString, outputFileWString);
 				}
 				else {
-					ui.outputContent->append(tr("|- ignor:") + element);
+					ui.outputContent->append(tr("|- ignor:") + *iterator);
 				}
-				ui.outputContent->append(tr("  |- ") + element);
+				ui.outputContent->append(tr("  |- ") + *iterator);
+				delete file.release();
+				file = NULL;
 			}
-			ui.outputContent->append(tr("comrpess action successful \n"));
-		}
-		else {
-			outputFile = inputFiles.at(0);
+
+			delete compressor.release();
+			compressor = NULL;
+
+			ui.outputContent->append(tr("压缩成功 \n"));
 		}
 		if (ui.isChangeHead->isChecked()) {
-			wchar_t* file = _wcsdup(outputFile.toStdWString().c_str());
-			int result = static_cast<int>(_changeHeaderTo(file));
+			auto opf = std::make_unique<QFileInfo>(outputFile);
+
+			if (!opf->exists()) {
+				ui.outputContent->append(tr("准备拷贝文件"));
+
+				if (QFile::copy(fileListData->at(0), outputFile)) {
+					ui.outputContent->append(tr("文件拷贝成功!"));
+				}
+				else {
+					ui.outputContent->append(tr("文件拷贝失败!"));
+				}
+			}
+			delete opf.release();
+			opf = NULL;
+
+			const wchar_t* outputFileWChar = reinterpret_cast<const wchar_t*>(outputFile.utf16());
+			qDebug();
+			errno_t result = _changeHeaderTo(outputFileWChar);
+
 			if (result == 0) {
 				ui.outputContent->append(tr("change header successful"));
 			}
 			else {
-				ui.outputContent->append(tr("change header error"));
-				ui.outputContent->append(tr("return value: " + result));
+				ui.outputContent->append(tr("change header to error"));
+				ui.outputContent->append(tr("错误返回值: "));
+				ui.outputContent->append(QString::QString(QChar(result)));
 			}
-			ui.outputContent->append(tr("change head to action successful \n"));
-			free(file);
+			ui.outputContent->append(tr("change head to successful \n"));
 		}
 	}
 	catch (const BitException& ex) {
@@ -272,38 +307,51 @@ void MKCompress::launchCompress(QStringList inputFiles, QString outputFile, bool
 
 void MKCompress::launchDecompress(QString inputFile, QString outputPath, QString pwd)
 {
-	ui.outputContent->append("Decompress message:");
-	ui.outputContent->append("|- Decompress file:" + inputFile);
-	ui.outputContent->append("|- Output file path:" + ui.outputPathContent->text());
-	ui.outputContent->append("|- Password:" + pwd);
+	ui.outputContent->append(tr("Decompress message:"));
+	ui.outputContent->append(tr("|- Decompress file:") + inputFile);
+	ui.outputContent->append(tr("|- Output file path:") + ui.outputPathContent->text());
 
-	wchar_t* file = _wcsdup(inputFile.toStdWString().c_str());
 	try {
 		// change head back
-		int result = static_cast<int>(_changeHeaderBack(file));
-		if (result == 0) {
-			ui.outputContent->append("change header successful");
+		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(inputFile.utf16());
 
+		errno_t result = _changeHeaderBack(fileWString);
+		if (result == 0) {
+			ui.outputContent->append(tr("-change header back successful"));
+
+			// check can extractor
 			if (ui.isCompress->isChecked()) {
 				Bit7zLibrary lib{ L"7za.dll" };
-				BitExtractor extractor{ lib, BitFormat::SevenZip };
+
+				// create a smart pointer
+				auto extractor = std::make_unique<BitExtractor>(lib, BitFormat::SevenZip);
 				if (pwd != "") {
-					extractor.setPassword(pwd.toStdWString());
+					const wstring password = std::wstring(reinterpret_cast<const wchar_t*>(pwd.utf16()));
+					ui.outputContent->append(tr("|- Password:") + pwd);
+					extractor->setPassword(password);
 				}
-				extractor.extract(inputFile.toStdWString(), outputPath.toStdWString());
+
+				const wstring inputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(inputFile.utf16()));
+				const wstring outputPathWString = std::wstring(reinterpret_cast<const wchar_t*>(outputPath.utf16()));
+
+				extractor->extract(inputFileWString, outputPathWString);
+
+				// release pointer
+				delete extractor.release();
+				extractor = NULL;
 			}
 			if (!ui.isCompress->isChecked()) {
 				// change head to
-				result = static_cast<int>(_changeHeaderTo(file));
+				result = static_cast<int>(_changeHeaderTo(fileWString));
 				if (result == 0) {
-					ui.outputContent->append("action successful \n");
+					ui.outputContent->append(tr("change head to error \n"));
 				}
 			}
-			ui.outputContent->append(tr("decomrpess action successful \n"));
+			ui.outputContent->append(tr("解压成功 \n"));
 		}
 		if (result != 0) {
-			ui.outputContent->append("change header error");
-			ui.outputContent->append(tr("return value: " + result));
+			ui.outputContent->append(tr("change head back error"));
+			ui.outputContent->append(tr("返回值: " + result));
 		}
 	}
 	catch (const BitException& ex) {
@@ -311,18 +359,16 @@ void MKCompress::launchDecompress(QString inputFile, QString outputPath, QString
 		qDebug() << ex.what();
 		ui.outputContent->append(ex.what());
 	}
-	free(file);
 }
 
 void MKCompress::custumContextMenu(const QPoint& pos)
 {
 	QListWidgetItem* curItem = ui.fileListView->itemAt(pos);
-	if (curItem == NULL)
-		return;
+	if (curItem == NULL) return;
 
 	auto popMenu = std::make_unique<QMenu>(this);
-	auto deleteSeed = std::make_unique<QAction>(tr("Delete"), this);
-	auto clearSeeds = std::make_unique<QAction>(tr("Clear"), this);
+	auto deleteSeed = std::make_unique<QAction>(tr("移除选中文件"), this);
+	auto clearSeeds = std::make_unique<QAction>(tr("清空输入列表"), this);
 
 	popMenu.get()->addAction(deleteSeed.get());
 	popMenu.get()->addAction(clearSeeds.get());
@@ -333,23 +379,29 @@ void MKCompress::custumContextMenu(const QPoint& pos)
 
 void MKCompress::deleteSeedSlot()
 {
-	int ch = QMessageBox::warning(NULL, "Warning",
-		"Are you sure to delete?",
+	int ch = QMessageBox::warning(NULL, tr("Warning"),
+		tr("你确定要删除吗？"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
-	if (ch != QMessageBox::Yes)
-		return;
+	if (ch != QMessageBox::Yes) return;
 
 	QListWidgetItem* item = ui.fileListView->currentItem();
-	if (item == NULL)
-		return;
+	if (item == NULL) return;
 
 	int curIndex = ui.fileListView->row(item);
 
-	fileListData.get()->takeAt(fileListData.get()->indexOf(item->text()));
-	ui.fileListView->takeItem(curIndex);
+	for (auto iterator = fileListData->begin(); iterator != fileListData->end(); )
+	{
+		if (*iterator == item->text()) {
+			iterator = this->fileListData->erase(iterator);
+		}
+		else {
+			++iterator;
+		}
+	}
 
+	ui.fileListView->takeItem(curIndex);
 
 	delete item;
 	flushData();
@@ -357,34 +409,44 @@ void MKCompress::deleteSeedSlot()
 
 void MKCompress::clearSeedsSlot()
 {
-	int ch = QMessageBox::warning(NULL, "Warning",
-		"Are you sure to clear this list?",
+	int ch = QMessageBox::warning(NULL, tr("Warning"),
+		tr("你确定要清除列表吗？"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
-	if (ch != QMessageBox::Yes)
-		return;
-
+	if (ch != QMessageBox::Yes) return;
 	QListWidgetItem* item = ui.fileListView->currentItem();
-	if (item == NULL)
-		return;
-
+	if (item == NULL) return;
 	ui.fileListView->clear();
-	fileListData.get()->clear();
+	fileListData->clear();
 	flushData();
 }
 
 void MKCompress::openDialog()
 {
-	CFileDialog fileDialog;
-	if (fileDialog.exec() == QDialog::Accepted)
+	auto fileDialog = std::make_unique<CFileDialog>();
+
+	if (fileDialog->exec() == QDialog::Accepted)
 	{
-		for each (QString element in fileDialog.selectedFiles().toList())
+		for each (const QString element in fileDialog->selectedFiles())
 		{
-			if (fileListData.get()->indexOf(element) == -1) {
-				fileListData.get()->append(element);
+			bool flag = true;
+
+			std::vector<QString>::const_iterator iterator;
+			for (iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
+			{
+				if (*iterator == element) {
+					flag = false;
+				}
 			}
+			if (flag) {
+				this->fileListData->push_back(element);
+			}
+
+			flag = true;
 		}
 		flushData();
 	}
+	delete fileDialog.release();
+	fileDialog = NULL;
 }

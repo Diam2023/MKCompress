@@ -16,5 +16,11 @@ now bug list(bug will be erase on next version):
 # bug list
  - can not use UTF-8 to change head
 
+
+# package
+ - windeployqt --release
+ - 
+
+
 # verion
  - 0.1

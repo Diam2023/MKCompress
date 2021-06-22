@@ -7,12 +7,9 @@
 class CFileDialog : public QFileDialog
 {
     Q_OBJECT
-public:
-    CFileDialog(QWidget* parent = 0);
-    ~CFileDialog();
+    public:
+        CFileDialog(QWidget* parent = 0);
 
-public slots:
-    void onChiose();
 };
 
 #endif

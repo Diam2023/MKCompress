@@ -63,6 +63,7 @@
       <AdditionalIncludeDirectories>C:\Users\monoliths\Documents\project\MKCompress\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
+      <WarningLevel>Level2</WarningLevel>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>C:\Users\monoliths\Documents\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

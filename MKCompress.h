@@ -9,60 +9,61 @@ const QString DEFAULT_TYPE = ".mkc";
 // prepar use to next version
 enum class RUN_MODE
 {
-    ONLY_CHANGEHEADTO,
-    ONLY_COMPRESS,
-    CHANGEHEADTO_ADN_COMPRESS,
-    COMPRESS_AND_ENCRYPTION,
-    MKCOMPRESS, // changeHeadTo Compress and Encryption
-    ONLY_CHANGEHEADBACK,
-    ONLY_DECOMPRESS,
-    CHANGEHEADBACK_AND_DECOMPRESS,
-    DECOMPRESS_AND_ENCRYPTION,
-    DEMKCOMPRESS
+	ONLY_CHANGEHEADTO,
+	ONLY_COMPRESS,
+	CHANGEHEADTO_ADN_COMPRESS,
+	COMPRESS_AND_ENCRYPTION,
+	MKCOMPRESS, // changeHeadTo Compress and Encryption
+	ONLY_CHANGEHEADBACK,
+	ONLY_DECOMPRESS,
+	CHANGEHEADBACK_AND_DECOMPRESS,
+	DECOMPRESS_AND_ENCRYPTION,
+	DEMKCOMPRESS
 };
 
 class MKCompress : public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    MKCompress(QWidget *parent = Q_NULLPTR);
+	MKCompress(QWidget* parent = Q_NULLPTR);
+	~MKCompress();
 
 private:
-    Ui::MKCompressClass ui;
+	Ui::MKCompressClass ui;
 
-    // mkc type header
-    const std::byte MKC_HEAD[4] { std::byte{0x20}, std::byte{0x15}, std::byte{0x12}, std::byte{0x27} };
+	// mkc type header
+	const std::byte MKC_HEAD[4]{ std::byte{0x20}, std::byte{0x15}, std::byte{0x12}, std::byte{0x27} };
 
-    // 7z header (only use 4 byte)
-    const std::byte SEVENZ_HEAD[4] { std::byte{0x37}, std::byte{0x7a}, std::byte{0xbc}, std::byte{0xaf} };
+	// 7z header (only use 4 byte)
+	const std::byte SEVENZ_HEAD[4]{ std::byte{0x37}, std::byte{0x7a}, std::byte{0xbc}, std::byte{0xaf} };
 
-    // auto fileListData;
-    std::unique_ptr<QStringList, std::default_delete<QStringList>> fileListData;
+	// unique_ptr fileListData;
+	std::unique_ptr<std::vector<QString>, std::default_delete<std::vector<QString>>> fileListData = std::make_unique<std::vector<QString>>();
 
-    QString outputFileName;
-    QString outputFilePath;
-    
-    bool isChangeHead;
-    bool isCompress;
-    bool isEncryption;
-    bool decompressable;
-    QString password;
+	QString outputFileName;
+	QString outputFilePath;
 
-    bool decompress;
+	bool isChangeHead;
+	bool isCompress;
+	bool isEncryption;
+	bool decompressable;
+	QString password;
 
-    void init();
-    void flushData();
+	bool decompress;
 
-    void launchCompress(QStringList inputFiles, QString outputFile, bool isCompress, QString pwd);
-    void launchDecompress(QString inputFile, QString outputPath, QString pwd);
+	void init();
+	void flushData();
 
-    char* getCharsMKC_HEAD();
-    char* getCharsSEVENZ_HEAD();
+	void launchCompress(QString outputFile, bool isCompress, QString pwd);
+	void launchDecompress(QString inputFile, QString outputPath, QString pwd);
+
+	char* getCharsMKC_HEAD();
+	char* getCharsSEVENZ_HEAD();
 
 private slots:
-    void openDialog();
-    void custumContextMenu(const QPoint& pos);
-    void deleteSeedSlot();
-    void clearSeedsSlot();
+	void openDialog();
+	void custumContextMenu(const QPoint& pos);
+	void deleteSeedSlot();
+	void clearSeedsSlot();
 };
