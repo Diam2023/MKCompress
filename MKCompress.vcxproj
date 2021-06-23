@@ -122,7 +122,6 @@
     </QtMoc>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="MKCompress.qrc" />
     <QtUic Include="MKCompress.ui" />
     <QtMoc Include="MKCompress.h" />
     <ClCompile Include="CFileDialog.cpp" />
@@ -137,6 +136,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.MD" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="MKCompress.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MKCompress.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

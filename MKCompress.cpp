@@ -9,6 +9,8 @@ MKCompress::MKCompress(QWidget* parent)
 {
 	ui.setupUi(this);
 
+	this->setWindowIcon(QIcon(":/img/mkcompress_o.png"));
+
 	init();
 }
 

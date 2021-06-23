@@ -14,13 +14,13 @@ now bug list(bug will be erase on next version):
  - can not compress use chinese name fluter
 
 # bug list
- - can not use UTF-8 to change head
+ - can not use UTF-8 String to initial output file name
+ - compress are not responce
 
 
 # package
- - windeployqt --release
- - 
+ - windeployqt 
 
 
 # verion
- - 0.1
+ - 1.0 
