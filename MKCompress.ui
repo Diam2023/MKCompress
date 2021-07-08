@@ -6,178 +6,161 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>845</width>
-    <height>501</height>
+    <width>534</width>
+    <height>181</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MKCompress</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="6,6">
+    <property name="spacing">
+     <number>18</number>
+    </property>
+    <property name="leftMargin">
+     <number>8</number>
+    </property>
+    <property name="topMargin">
+     <number>3</number>
+    </property>
+    <property name="rightMargin">
+     <number>8</number>
+    </property>
+    <property name="bottomMargin">
+     <number>3</number>
+    </property>
     <item>
-     <layout class="QHBoxLayout" name="mainLayout" stretch="8,7">
+     <layout class="QVBoxLayout" name="mainLayout" stretch="6,6">
       <property name="spacing">
-       <number>15</number>
+       <number>12</number>
       </property>
       <item>
-       <layout class="QVBoxLayout" name="leftPartLayout">
+       <layout class="QHBoxLayout" name="choosseFileLayout" stretch="1,5">
         <item>
-         <layout class="QVBoxLayout" name="fileInput">
-          <property name="spacing">
-           <number>3</number>
-          </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
-          </property>
-          <item>
-           <widget class="QPushButton" name="fileChoose">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>选择文件</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QListWidget" name="fileListView"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="outputLayout" stretch="1,1,4">
-          <item>
-           <layout class="QHBoxLayout" name="outputFileNameLayout">
-            <item>
-             <widget class="QLabel" name="outputFileNameLabel">
-              <property name="text">
-               <string>输出文件名：</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="outPutFileNameContent"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="outputPathLayout">
-            <property name="spacing">
-             <number>6</number>
-            </property>
-            <item>
-             <widget class="QLabel" name="outputPathLabel">
-              <property name="text">
-               <string>输出路径：</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLineEdit" name="outputPathContent"/>
-            </item>
-            <item>
-             <widget class="QPushButton" name="outputPathChoose">
-              <property name="text">
-               <string>选择</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="compressOptionLayout">
-            <item>
-             <layout class="QVBoxLayout" name="optionListLayout">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <property name="sizeConstraint">
-               <enum>QLayout::SetDefaultConstraint</enum>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="QCheckBox" name="isChangeHead">
-                <property name="enabled">
-                 <bool>true</bool>
-                </property>
-                <property name="text">
-                 <string>改变文件头</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="isCompress">
-                <property name="text">
-                 <string>压缩</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="isEncryption">
-                <property name="text">
-                 <string>加密</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="pwdOptionListLayout">
-              <item>
-               <widget class="QLabel" name="passwordLabel">
-                <property name="text">
-                 <string>密码：</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="passwordContent"/>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="startAction">
+         <widget class="QPushButton" name="fileChoose">
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>35</height>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
            </size>
           </property>
           <property name="text">
-           <string>开始</string>
+           <string>选择文件</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="inputFilePathContent">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
           </property>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <layout class="QVBoxLayout" name="rightPartLayout">
+       <layout class="QHBoxLayout" name="outputPathLayout">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <property name="topMargin">
+         <number>2</number>
+        </property>
+        <property name="bottomMargin">
+         <number>2</number>
+        </property>
         <item>
-         <widget class="QLabel" name="outputLabel">
+         <widget class="QLabel" name="outputPathLabel">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
+          </property>
           <property name="text">
-           <string>输出：</string>
+           <string>输出路径：</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QTextEdit" name="outputContent"/>
+         <widget class="QTextEdit" name="outputPathContent">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="outputPathChoose">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>选择</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="QPushButton" name="startAction">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>35</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>35</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>开始</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -186,7 +169,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>845</width>
+     <width>534</width>
      <height>22</height>
     </rect>
    </property>

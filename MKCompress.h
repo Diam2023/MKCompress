@@ -14,6 +14,11 @@ enum class RUN_MODE
 	ENCRYPRION, // changeHeadTo Compress and Encryption
 };
 
+/// <summary>
+///	<author>author: monoliths</author>
+/// <br/>
+/// <version>version: 1.1.0</version>
+/// </summary>
 class MKCompress : public QMainWindow
 {
 	Q_OBJECT
@@ -25,38 +30,22 @@ public:
 private:
 	Ui::MKCompressClass ui;
 
+	QMutex mutex;
+
+	bool changeHeader;
+
+	QString parent;
+
 	// mkc type header
 	const std::byte MKC_HEAD[4]{ std::byte{0x20}, std::byte{0x15}, std::byte{0x12}, std::byte{0x27} };
 
-	// 7z header (only use 4 byte)
-	const std::byte SEVENZ_HEAD[4]{ std::byte{0x37}, std::byte{0x7a}, std::byte{0xbc}, std::byte{0xaf} };
-
-	// unique_ptr fileListData;
-	std::unique_ptr<std::vector<QString>, std::default_delete<std::vector<QString>>> fileListData = std::make_unique<std::vector<QString>>();
-
-	QString outputFileName;
-	QString outputFilePath;
-
-	bool isChangeHead;
-	bool isCompress;
-	bool isEncryption;
-	bool decompressable;
-	QString password;
-
-	bool decompress;
-
 	void init();
-	void flushData();
 
-	void launchCompress(QString outputFile, bool isCompress, QString pwd);
-	void launchDecompress(QString inputFile, QString outputPath, QString pwd);
+	void launchChangeHeaderTo(const QString inputFile, const QString outputPath);
+	void launchChangeHeaderBack(QString inputFile, QString outputPath);
 
 	char* getCharsMKC_HEAD();
-	char* getCharsSEVENZ_HEAD();
 
 private slots:
-	void openDialog();
-	void custumContextMenu(const QPoint& pos);
-	void deleteSeedSlot();
-	void clearSeedsSlot();
+	void chooseFileDialog();
 };

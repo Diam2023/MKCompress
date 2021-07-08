@@ -4,11 +4,7 @@
 #include <qstringlist.h>
 #include <qlist.h>
 #include <qfile.h>
-
-#include "bitextractor.hpp"
-#include "bitexception.hpp"
-#include "bitarchiveinfo.hpp"
-#include "bitcompressor.hpp"
+#include <QMutex>
 
 #include <iostream>
 #include <memory>

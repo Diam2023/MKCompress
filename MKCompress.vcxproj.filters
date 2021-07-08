@@ -43,19 +43,12 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CFileDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="CFileDialog.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.MD">
       <Filter>Translation Files</Filter>
     </None>
+    <None Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="MKCompress.qrc">

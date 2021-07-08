@@ -63,12 +63,12 @@
       <AdditionalIncludeDirectories>F:\project\MKCompress\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
-      <WarningLevel>Level2</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>F:\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bit7z64_d.lib;bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>bit7z64_d.lib bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>MKCT.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <QtTranslation>
       <BuildAction>false</BuildAction>
@@ -124,10 +124,8 @@
   <ItemGroup>
     <QtUic Include="MKCompress.ui" />
     <QtMoc Include="MKCompress.h" />
-    <ClCompile Include="CFileDialog.cpp" />
     <ClCompile Include="MKCompress.cpp" />
     <ClCompile Include="main.cpp" />
-    <QtMoc Include="CFileDialog.h" />
     <ClInclude Include="include\MKCTDLL.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="stdafx.cpp">
@@ -136,6 +134,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="README.MD" />
   </ItemGroup>
   <ItemGroup>
