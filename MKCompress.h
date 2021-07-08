@@ -9,16 +9,9 @@ const QString DEFAULT_TYPE = ".mkc";
 // prepar use to next version
 enum class RUN_MODE
 {
-	ONLY_CHANGEHEADTO,
-	ONLY_COMPRESS,
-	CHANGEHEADTO_ADN_COMPRESS,
-	COMPRESS_AND_ENCRYPTION,
-	MKCOMPRESS, // changeHeadTo Compress and Encryption
-	ONLY_CHANGEHEADBACK,
-	ONLY_DECOMPRESS,
-	CHANGEHEADBACK_AND_DECOMPRESS,
-	DECOMPRESS_AND_ENCRYPTION,
-	DEMKCOMPRESS
+	CHANGEHEADER,
+	COMPRESS,
+	ENCRYPRION, // changeHeadTo Compress and Encryption
 };
 
 class MKCompress : public QMainWindow

@@ -60,13 +60,13 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\monoliths\Documents\project\MKCompress\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\project\MKCompress\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <WarningLevel>Level2</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\monoliths\Documents\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>bit7z64_d.lib;bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>bit7z64_d.lib bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -128,6 +128,7 @@
     <ClCompile Include="MKCompress.cpp" />
     <ClCompile Include="main.cpp" />
     <QtMoc Include="CFileDialog.h" />
+    <ClInclude Include="include\MKCTDLL.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>

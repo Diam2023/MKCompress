@@ -1,3 +1,5 @@
+# pragma warning (disable:4819)
+
 #include "MKCompress.h"
 #include "MKCTDLL.hpp"
 #include "CFileDialog.h"
@@ -294,7 +296,7 @@ void MKCompress::launchCompress(QString outputFile, bool isCompress, QString pwd
 			}
 			else {
 				ui.outputContent->append(tr("change header to error"));
-				ui.outputContent->append(tr("错误返回值: "));
+				ui.outputContent->append(tr("错误返回值:"));
 				ui.outputContent->append(QString::QString(QChar(result)));
 			}
 			ui.outputContent->append(tr("change head to successful \n"));
@@ -382,7 +384,7 @@ void MKCompress::custumContextMenu(const QPoint& pos)
 void MKCompress::deleteSeedSlot()
 {
 	int ch = QMessageBox::warning(NULL, tr("Warning"),
-		tr("你确定要删除吗？"),
+		tr("你确定要删除吗?"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
@@ -412,7 +414,7 @@ void MKCompress::deleteSeedSlot()
 void MKCompress::clearSeedsSlot()
 {
 	int ch = QMessageBox::warning(NULL, tr("Warning"),
-		tr("你确定要清除列表吗？"),
+		tr("你确定要清除列表吗?"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
