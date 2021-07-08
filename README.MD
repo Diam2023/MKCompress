@@ -24,8 +24,8 @@ use bit7z and MKCY(miku change head tools)
 
 
 ## verion
- - 1.0 added basics compose
-  - change header
-  - bit7z to compress files
-   - only cover 7z compress
-  - support encryption of compress
+- 1.0 added basics compose
+	- change header
+	- bit7z to compress files
+		- only cover 7z compress
+	- support encryption of compress
