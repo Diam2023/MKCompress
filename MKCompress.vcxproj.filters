@@ -26,12 +26,6 @@
     <QtUic Include="MKCompress.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtMoc Include="MKCompress.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <ClCompile Include="MKCompress.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -46,9 +40,15 @@
     <ClCompile Include="CFileDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MKCompress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CFileDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MKCompress.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -56,6 +56,7 @@
     <None Include="README.MD">
       <Filter>Translation Files</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="MKCompress.qrc">

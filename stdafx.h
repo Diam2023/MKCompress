@@ -4,6 +4,7 @@
 #include <qstringlist.h>
 #include <qlist.h>
 #include <qfile.h>
+#include <QDebug>
 
 #include "bitextractor.hpp"
 #include "bitexception.hpp"

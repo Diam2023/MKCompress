@@ -44,5 +44,17 @@ extern "C" __declspec(dllimport) char* _getMKFileHeader(const wchar_t* file);
 /// <param name="bytes">data</param>
 /// <param name="bytelength">length</param>
 extern "C" __declspec(dllimport) void _bytesToHexString(char* bytes, int bytelength);
+/// <summary>
+/// add bytes to last
+/// only support save over length of 4 bytes to exprence bytes
+/// </summary>
+/// <param name="bytes">data</param>
+extern "C" __declspec(dllimport) errno_t _pushLastBytes(const wchar_t* file, char* bytes);
+
+/// <summary>
+/// return and delete the last of added bytes
+/// </summary>
+/// <returns></returns>
+extern "C" __declspec(dllimport) char* _popLatsBytes(const wchar_t* file);
 
 #endif // !MKCTDLL
