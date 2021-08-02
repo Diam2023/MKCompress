@@ -1,5 +1,3 @@
-# pragma warning (disable:4819)
-
 #include "MKCompress.h"
 #include "MKCTDLL.hpp"
 #include "CFileDialog.h"
@@ -11,56 +9,49 @@ MKCompress::MKCompress(QWidget* parent)
 {
 	ui.setupUi(this);
 
-	this->setWindowIcon(QIcon(":/img/mkcompress_o.png"));
+	MKC_HEADER = mkc::stdBytesToChars(mkc::MKC_HEAD);
+
+	SEVENZ_HEADER = mkc::stdBytesToChars(mkc::SEVENZ_HEAD);
+
+	this->setWindowIcon(QIcon(tr(":/img/mkcompress_o.png")));
 
 	init();
 }
 
-MKCompress::~MKCompress() {
-
+MKCompress::~MKCompress()
+{
 	delete fileListData.release();
 	fileListData = NULL;
 
+	free(MKC_HEADER);
+	free(SEVENZ_HEADER);
+
+	MKC_HEADER = nullptr;
+	SEVENZ_HEADER = nullptr;
 }
 
-char* MKCompress::getCharsMKC_HEAD() {
-	static char data[4];
-	int i = 0;
-	for each (std::byte item in MKC_HEAD)
-	{
-		data[i++] = std::to_integer<char>(item);
-	}
-	return data;
+void MKCompress::outputFlag()
+{
+	qDebug() << tr("------------------------");
+	qDebug() << tr("forward:") << launchFlag->forward;
+	qDebug() << tr("change headerable:") << launchFlag->changeHeaderAble;
+	qDebug() << tr("compressable:") << launchFlag->compressAble;
+	qDebug() << tr("change header:") << launchFlag->changeHeader;
+	qDebug() << tr("compress:") << launchFlag->compress;
+	qDebug() << tr("mode:") << static_cast<int>(launchFlag->mode);
 }
 
-char* MKCompress::getCharsSEVENZ_HEAD() {
-	static char data[4];
-	int i = 0;
-	for each (std::byte item in SEVENZ_HEAD)
-	{
-		data[i++] = std::to_integer<char>(item);
-	}
-	return data;
-}
-
-/// <summary>
-/// main initialize
-/// </summary>
 void MKCompress::init()
 {
-	// init fileListData
-	// fileListData = new std::vector<QString>();
-
-	// to solve add menu
-	ui.fileListView->setContextMenuPolicy(Qt::CustomContextMenu);
-
 	flushData();
 
+	// Solve add menu
+	ui.fileListView->setContextMenuPolicy(Qt::CustomContextMenu);
+
 	connect(ui.openAction, SIGNAL(triggered()), this, SLOT(openDialog()));
+	connect(ui.fileChoose, SIGNAL(clicked(bool)), this, SLOT(openDialog()));
 
 	connect(ui.exitAction, SIGNAL(triggered()), qApp, SLOT(exit()));
-
-	connect(ui.fileChoose, SIGNAL(clicked(bool)), this, SLOT(openDialog()));
 
 	connect(ui.fileListView, SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(custumContextMenu(const QPoint&)));
 
@@ -72,80 +63,86 @@ void MKCompress::init()
 				return;
 			}
 			ui.outputPathContent->setText(filePath);
-			outputFilePath = filePath;
-			flushData();
 		}
 	);
 
 	connect(
 		ui.isChangeHead, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
-			if (!decompress) {
-				ui.isCompress->setEnabled(false);
-				ui.isCompress->setCheckable(true);
-			}
-			else {
-				if (decompressable) {
-					ui.isCompress->setEnabled(true);
-				}
-			}
+			launchFlag->changeHeader = ui.isChangeHead->isChecked();
+
+			flushLaunchStatus();
+			
+			flushOutputPath();
 		}
 	);
 
 	connect(
 		ui.isCompress, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
-			if (!decompress) {
-				ui.isCompress->setText(tr("压缩"));
-				ui.isEncryption->setText(tr("加密"));
-				ui.isEncryption->setChecked(false);
-				ui.isEncryption->setEnabled(ui.isCompress->isChecked());
+			launchFlag->compress = ui.isCompress->isChecked();
+
+			flushLaunchStatus();
+
+			flushCheckBoxStatus();
+
+			flushOutputPath();
+
+			if (launchFlag->compressAble && launchFlag->compress) {
+				ui.passwordContent->setText(tr(""));
+				ui.passwordContent->setEnabled(true);
 			}
 			else {
-				ui.isCompress->setText(tr("解压"));
-				ui.isEncryption->setText(tr("解密"));
-				ui.outPutFileNameContent->setText("");
-				ui.outPutFileNameContent->setEnabled(false);
-				if (decompressable && ui.isCompress->isChecked()) {
-					ui.isEncryption->setEnabled(true);
-					ui.isEncryption->setChecked(true);
-				}
-				else {
-					ui.isEncryption->setEnabled(false);
-					ui.isEncryption->setChecked(false);
-				}
+				ui.passwordContent->setText("");
+				ui.passwordContent->setEnabled(false);
 			}
-			flushData();
-		}
-	);
-	connect(
-		ui.isEncryption, QOverload<bool>::of(&QCheckBox::toggled), [=](bool check) {
-			ui.passwordContent->setText("");
-			ui.passwordContent->setEnabled(ui.isEncryption->isChecked());
 		}
 	);
 
 	connect(
 		ui.startAction, QOverload<bool>::of(&QPushButton::clicked), [=](bool check) {
-			if (outputFileName = ui.outPutFileNameContent->text(), password = ui.passwordContent->text();  !fileListData->empty() && outputFilePath != "") {
-				if (decompress && fileListData->size() == 1) {
-					launchDecompress(fileListData->at(0), outputFilePath, password);
-					return;
+			QString outputFileName;
+			QString outputFilePath;
+
+			if (outputFilePath = ui.outputPathContent->text();
+				!fileListData->empty() && outputFilePath != "") {
+
+				QString opf;
+				
+				if (launchFlag->forward) {
+					if (outputFileName = ui.outPutFileNameContent->text(); outputFileName != "") {
+						password = ui.passwordContent->text();
+						// unique pointer
+						auto dir = std::make_unique<QDir>(outputFilePath);
+						opf = dir->absoluteFilePath(outputFileName);
+						// release dir space
+						delete dir.release();
+						dir = nullptr;
+					}
+					else {
+						ui.outputContent->append(tr("输入无效!"));
+						return;
+					}
 				}
-				else if (outputFileName != "") {
-					launchCompress(outputFilePath + tr("/") + outputFileName, ui.isCompress->isChecked(), password);
-					return;
+				else {
+					opf = outputFilePath;
 				}
+				// wait to reconstruct
+				launchCompress(launchFlag->compress, fileListData, opf, password);
 			}
-			ui.outputContent->append(tr("输入文件无效、输出路径或输出文件名错误!"));
+			else {
+				ui.outputContent->append(tr("输入无效!"));
+				return;
+			}
+			qDebug() << tr("launch");
+			outputFlag();
 		}
 	);
-
 }
 
-/// <summary>
-/// flush fileListData to fileListView
-/// </summary>
 void MKCompress::flushData()
 {
+	launchFlag->changeHeader = ui.isChangeHead->isChecked();
+	launchFlag->compress = ui.isCompress->isChecked();
+
 	// clear file view
 	ui.fileListView->clear();
 	// add file data to file view
@@ -153,215 +150,162 @@ void MKCompress::flushData()
 	{
 		ui.fileListView->addItem(*iterator);
 	}
-	// initialize save path
 
+	// initialize save path
+	if (!fileListData->empty()) {
+		// git first file to initialize output
+		auto file = std::make_unique<QFileInfo>(fileListData->at(0));
+		// clear output
+		ui.outputContent->clear();
+
+		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(fileListData->at(0).utf16());
+
+		// if has data
+		if (fileListData->size() == 1 && file->isFile()) {
+			// if is file
+			// MKC file to change header back
+			if (*_getFileHeader(fileWString) == *MKC_HEADER) {
+				// default to unzip
+				launchFlag->forward = false;
+				launchFlag->changeHeaderAble = true;
+				// change header back mode
+				if (*_getMKFileHeader(fileWString) == *SEVENZ_HEADER) {
+					// It can be compress
+					launchFlag->compressAble = true;
+				} // It can not be compress
+				else {
+					launchFlag->compressAble = false;
+				}
+
+				// TODO wait to add output file name
+				ui.outputContent->append(tr("已识别到MKC文件\n"));
+				ui.outputContent->append(tr("还原模式\n"));
+			} // to change header
+			else {
+				launchFlag->forward = true;
+				launchFlag->changeHeaderAble = true;
+				launchFlag->compressAble = true;
+
+				ui.outputContent->append(tr("换头模式\n"));
+			}
+		}
+		// if is not file
+		// if is a floder or have more than one file
+		// it will be Compress
+		else {
+			// can be compress and change header
+			launchFlag->forward = true;
+			launchFlag->compressAble = true;
+			launchFlag->changeHeaderAble = false;
+
+			ui.outputContent->append(tr("压缩模式\n"));
+		}
+
+		flushCheckBoxStatus();
+
+		flushOutputPath();
+
+		delete file.release();
+		file = NULL;
+	} // init check box
+	else {
+		ui.isChangeHead->setChecked(false);
+		ui.isChangeHead->setCheckable(false);
+		ui.isCompress->setChecked(false);
+		ui.isCompress->setCheckable(false);
+		ui.passwordContent->setEnabled(false);
+		ui.passwordContent->setText("");
+		ui.outPutFileNameContent->setText("");
+		ui.outputContent->setText("");
+	}
+}
+
+void MKCompress::flushOutputPath() {
 	if (!fileListData->empty()) {
 		auto file = std::make_unique<QFileInfo>(fileListData->at(0));
-		// get file parent path
-		if (ui.outputPathContent->text() == "") {
-			QString parentPath = file->absolutePath();
-			ui.outputPathContent->setText(parentPath);
-			outputFilePath = parentPath;
-		}
-		if (!decompress && (ui.isChangeHead->isChecked() || ui.isCompress->isChecked()) && ui.outPutFileNameContent->text() == "") {
-			QString fileName = file->baseName() + DEFAULT_TYPE;
-			ui.outPutFileNameContent->setText(fileName);
-			outputFileName = fileName;
-		}
-		// free space
-		ui.outputContent->clear();
-		ui.isChangeHead->setChecked(true);
-		// if file is .mkc
-		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(fileListData->at(0).utf16());
-		if ((fileListData->size() == 1) && file->isFile() && (*_getFileHeader(fileWString) == *getCharsMKC_HEAD())) {
-			ui.outputContent->append(tr("已识别到MKC文件 \n"));
-			ui.outputContent->append(tr("还原模式 \n"));
-			// decompress mode
-			decompressable = (*_getMKFileHeader(fileWString) == *getCharsSEVENZ_HEAD());
-			decompress = true;
-
-			ui.isChangeHead->setEnabled(false);
-			ui.isChangeHead->setChecked(true);
-			if (decompressable) {
-				ui.outputContent->append(tr("已识别到7z文件，可进行解压 \n"));
-				ui.isCompress->setEnabled(true);
-				ui.isCompress->setChecked(true);
-				ui.isEncryption->setEnabled(true);
-				ui.isEncryption->setChecked(false);
+		if (launchFlag->forward) {
+			// set output file name
+			if (launchFlag->compressAble) {
+				// QString fileName = (ui.outPutFileNameContent->text() == "") ? file->baseName() : ui.outPutFileNameContent->text();
+				QString fileName = file->baseName();
+				if (launchFlag->changeHeader) {
+					fileName += mkc::MKC_TYPE;
+				}
+				else if (launchFlag->compress) {
+					fileName += mkc::SEVENZ_TYPE;
+				}
+				else {
+					fileName = "";
+					qDebug() << tr("skip output file name");
+					// ignor
+				}
+				ui.outPutFileNameContent->setText(fileName);
 			}
-			else {
-				ui.isCompress->setEnabled(false);
-				ui.isCompress->setChecked(false);
-				ui.isEncryption->setEnabled(false);
-				ui.isEncryption->setChecked(false);
+
+			// set output file path
+			if (ui.outputPathContent->text() == "") {
+				ui.outputPathContent->setText(file->absolutePath());
 			}
 		}
 		else {
-			ui.outputContent->append(tr("压缩模式 \n"));
-			// compress mode
-			ui.outPutFileNameContent->setEnabled(true);
-			ui.isChangeHead->setEnabled(true);
-			ui.isChangeHead->setChecked(true);
-			ui.isCompress->setChecked(true);
-			ui.isCompress->setEnabled(false);
-			ui.isEncryption->setChecked(false);
-			ui.passwordContent->setEnabled(false);
-			// flag
-			decompress = false;
+			// set output file path
+			auto dir = std::make_unique<QDir>(file->absolutePath());
+			ui.outputPathContent->setText(dir->absoluteFilePath(file->baseName()));
+			// release dir space
+			delete dir.release();
+			dir = nullptr;
+
+			// TODO to get file name
 		}
 
 		delete file.release();
 		file = NULL;
 	}
-	else {
-		ui.outputContent->append(tr("请选择文件 \n"));
-		// init check box
+}
+void MKCompress::flushCheckBoxStatus() {
+	if (launchFlag->changeHeaderAble || launchFlag->compress) {
+		ui.isChangeHead->setCheckable(true);
 		ui.isChangeHead->setChecked(true);
+	}
+	else {
+		ui.isChangeHead->setChecked(false);
+		ui.isChangeHead->setCheckable(false);
+	}
+	if (launchFlag->compressAble) {
+		ui.isCompress->setCheckable(true);
+		if (launchFlag->changeHeaderAble) {
+			ui.isChangeHead->setChecked(true);
+		}
+		else {
+			ui.isChangeHead->setChecked(false);
+		}
+	}
+	else {
 		ui.isCompress->setChecked(false);
-		ui.isCompress->setEnabled(false);
-		ui.isEncryption->setChecked(false);
-		ui.isEncryption->setEnabled(false);
-		ui.passwordContent->setEnabled(false);
-		decompress = false;
+		ui.isCompress->setCheckable(false);
+	}
+
+	if (launchFlag->forward) {
+		ui.isCompress->setText(tr("压缩"));
+		ui.outPutFileNameContent->setEnabled(true);
+	}
+	else {
+		ui.isCompress->setText(tr("解压"));
+		ui.outPutFileNameContent->setText("");
+		ui.outPutFileNameContent->setEnabled(false);
 	}
 }
 
-void MKCompress::launchCompress(QString outputFile, bool isCompress, QString pwd)
+void MKCompress::flushLaunchStatus()
 {
-	ui.outputContent->append(tr("Compress message:"));
-	ui.outputContent->append(tr("|- Compress file list:"));
-	ui.outputContent->append(tr("|- Output file path:") + outputFile);
-
-	try {
-		if (ui.isCompress->isChecked()) {
-			Bit7zLibrary lib{ L"7za.dll" };
-
-			auto compressor = std::make_unique<BitCompressor>(lib, BitFormat::SevenZip);
-			if (pwd != "") {
-				const wstring password = std::wstring(reinterpret_cast<const wchar_t*>(pwd.utf16()));
-				compressor->setPassword(password);
-				ui.outputContent->append(tr("|- Password:") + pwd);
-			}
-			compressor->setUpdateMode(true);
-
-			for (auto iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
-			{
-				auto element = *iterator;
-				auto file = std::make_unique<QFileInfo>(element);
-
-				const wstring inputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(iterator->utf16()));
-				const wstring outputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(outputFile.utf16()));
-
-				if (file->isDir()) {
-					compressor->compressDirectory(inputFileWString, outputFileWString);
-				}
-				else if (file->isFile()) {
-					compressor->compressFile(inputFileWString, outputFileWString);
-				}
-				else {
-					ui.outputContent->append(tr("|- ignor:") + *iterator);
-				}
-				ui.outputContent->append(tr("  |- ") + *iterator);
-				delete file.release();
-				file = NULL;
-			}
-
-			delete compressor.release();
-			compressor = NULL;
-
-			ui.outputContent->append(tr("压缩成功 \n"));
-		}
-		if (ui.isChangeHead->isChecked()) {
-			auto opf = std::make_unique<QFileInfo>(outputFile);
-
-			if (!opf->exists()) {
-				ui.outputContent->append(tr("准备拷贝文件"));
-
-				if (QFile::copy(fileListData->at(0), outputFile)) {
-					ui.outputContent->append(tr("文件拷贝成功!"));
-				}
-				else {
-					ui.outputContent->append(tr("文件拷贝失败!"));
-				}
-			}
-			delete opf.release();
-			opf = NULL;
-
-			const wchar_t* outputFileWChar = reinterpret_cast<const wchar_t*>(outputFile.utf16());
-			qDebug();
-			errno_t result = _changeHeaderTo(outputFileWChar);
-
-			if (result == 0) {
-				ui.outputContent->append(tr("change header successful"));
-			}
-			else {
-				ui.outputContent->append(tr("change header to error"));
-				ui.outputContent->append(tr("错误返回值:"));
-				ui.outputContent->append(QString::QString(QChar(result)));
-			}
-			ui.outputContent->append(tr("change head to successful \n"));
-		}
+	if (launchFlag->changeHeader && launchFlag->compress) {
+		launchFlag->mode = mkc::COMPRESS_MODE::COMPRESS_AND_CHANGE_HEADER;
 	}
-	catch (const BitException& ex) {
-		// synchronize to conslot
-		qDebug() << ex.what();
-		ui.outputContent->append(ex.what());
+	else if (launchFlag->changeHeader) {
+		launchFlag->mode = mkc::COMPRESS_MODE::ONLY_CHANGE_HEADER;
 	}
-}
-
-void MKCompress::launchDecompress(QString inputFile, QString outputPath, QString pwd)
-{
-	ui.outputContent->append(tr("Decompress message:"));
-	ui.outputContent->append(tr("|- Decompress file:") + inputFile);
-	ui.outputContent->append(tr("|- Output file path:") + ui.outputPathContent->text());
-
-	try {
-		// change head back
-		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(inputFile.utf16());
-
-		errno_t result = _changeHeaderBack(fileWString);
-		if (result == 0) {
-			ui.outputContent->append(tr("-change header back successful"));
-
-			// check can extractor
-			if (ui.isCompress->isChecked()) {
-				Bit7zLibrary lib{ L"7za.dll" };
-
-				// create a smart pointer
-				auto extractor = std::make_unique<BitExtractor>(lib, BitFormat::SevenZip);
-				if (pwd != "") {
-					const wstring password = std::wstring(reinterpret_cast<const wchar_t*>(pwd.utf16()));
-					ui.outputContent->append(tr("|- Password:") + pwd);
-					extractor->setPassword(password);
-				}
-
-				const wstring inputFileWString = std::wstring(reinterpret_cast<const wchar_t*>(inputFile.utf16()));
-				const wstring outputPathWString = std::wstring(reinterpret_cast<const wchar_t*>(outputPath.utf16()));
-
-				extractor->extract(inputFileWString, outputPathWString);
-
-				// release pointer
-				delete extractor.release();
-				extractor = NULL;
-			}
-			if (!ui.isCompress->isChecked()) {
-				// change head to
-				result = static_cast<int>(_changeHeaderTo(fileWString));
-				if (result == 0) {
-					ui.outputContent->append(tr("change head to error \n"));
-				}
-			}
-			ui.outputContent->append(tr("解压成功 \n"));
-		}
-		if (result != 0) {
-			ui.outputContent->append(tr("change head back error"));
-			ui.outputContent->append(tr("返回值: " + result));
-		}
-	}
-	catch (const BitException& ex) {
-		// synchronize to conslot
-		qDebug() << ex.what();
-		ui.outputContent->append(ex.what());
+	else if (launchFlag->compress) {
+		launchFlag->mode = mkc::COMPRESS_MODE::ONLY_COMPRESS;
 	}
 }
 
@@ -384,7 +328,7 @@ void MKCompress::custumContextMenu(const QPoint& pos)
 void MKCompress::deleteSeedSlot()
 {
 	int ch = QMessageBox::warning(NULL, tr("Warning"),
-		tr("你确定要删除吗?"),
+		tr("你确定要删除?"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
@@ -414,7 +358,7 @@ void MKCompress::deleteSeedSlot()
 void MKCompress::clearSeedsSlot()
 {
 	int ch = QMessageBox::warning(NULL, tr("Warning"),
-		tr("你确定要清除列表吗?"),
+		tr("你确定要清除列表?"),
 		QMessageBox::Yes | QMessageBox::No,
 		QMessageBox::No);
 
@@ -453,4 +397,12 @@ void MKCompress::openDialog()
 	}
 	delete fileDialog.release();
 	fileDialog = NULL;
+}
+
+void MKCompress::launchCompress(bool flag, std::unique_ptr<std::vector<QString>, std::default_delete<std::vector<QString>>>& inputFileList, QString outputFile, QString pwd)
+{
+}
+
+void MKCompress::changeHeader(bool flag, QString path)
+{
 }
