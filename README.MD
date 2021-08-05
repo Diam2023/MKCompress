@@ -29,7 +29,6 @@ It can mix folder and file to compress and auto save origin file name then the c
 
 ## Verion
  - 1.0 added basics compose
-  - change header
-  - bit7z to compress files
-   - only cover 7z compress
-  - support encryption of compress
+   - change header
+   - compress
+   - added save suffix to mkc file
