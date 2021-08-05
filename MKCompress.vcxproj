@@ -128,8 +128,10 @@
     <QtMoc Include="CFileDialog.h" />
     <ClInclude Include="include\MKCTDLL.hpp" />
     <QtMoc Include="MKCompress.h" />
+    <QtMoc Include="MKCTExtend.h" />
     <ClInclude Include="stdafx.h" />
     <ClCompile Include="MKCompress.cpp" />
+    <ClCompile Include="MKCTExtend.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">Create</PrecompiledHeader>

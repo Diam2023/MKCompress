@@ -5,6 +5,7 @@
 #include <qlist.h>
 #include <qfile.h>
 #include <QDebug>
+#include <qthread.h>
 
 #include "bitextractor.hpp"
 #include "bitexception.hpp"
@@ -13,3 +14,4 @@
 
 #include <iostream>
 #include <memory>
+#include <errno.h>

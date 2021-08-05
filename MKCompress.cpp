@@ -1,6 +1,7 @@
 #include "MKCompress.h"
 #include "MKCTDLL.hpp"
 #include "CFileDialog.h"
+#include "MKCTExtend.h"
 
 using namespace bit7z;
 
@@ -26,6 +27,8 @@ MKCompress::~MKCompress()
 	free(MKC_HEADER);
 	free(SEVENZ_HEADER);
 
+	delete launchFlag;
+
 	MKC_HEADER = nullptr;
 	SEVENZ_HEADER = nullptr;
 }
@@ -43,6 +46,8 @@ void MKCompress::outputFlag()
 
 void MKCompress::init()
 {
+	isRunning = false;
+
 	flushData();
 
 	// Solve add menu
@@ -119,21 +124,31 @@ void MKCompress::init()
 					}
 					else {
 						ui.outputContent->append(tr("输入无效!"));
+						QMessageBox::warning(NULL, tr("Warning"),
+							tr("输入无效!"), QMessageBox::Yes, QMessageBox::No);
 						return;
 					}
 				}
 				else {
 					opf = outputFilePath;
 				}
+				// input file equle output file
+				if ((fileListData->size() == 1) && fileListData->at(mkc::FIRST_ELEMENT) == opf) {
+					ui.outputContent->append(tr("输入无效!"));
+					QMessageBox::warning(NULL, tr("Warning"),
+						tr("输入无效!"), QMessageBox::Yes, QMessageBox::No);
+					return;
+				}
 				// wait to reconstruct
-				launchCompress(launchFlag->compress, fileListData, opf, password);
+				launch(launchFlag, fileListData.get(), opf, password);
 			}
 			else {
 				ui.outputContent->append(tr("输入无效!"));
+				QMessageBox::warning(NULL, tr("Warning"),
+					tr("输入无效!"), QMessageBox::Yes, QMessageBox::No);
 				return;
 			}
-			qDebug() << tr("launch");
-			outputFlag();
+			// end of launch
 		}
 	);
 }
@@ -154,11 +169,11 @@ void MKCompress::flushData()
 	// initialize save path
 	if (!fileListData->empty()) {
 		// git first file to initialize output
-		auto file = std::make_unique<QFileInfo>(fileListData->at(0));
+		auto file = std::make_unique<QFileInfo>(fileListData->at(mkc::FIRST_ELEMENT));
 		// clear output
 		ui.outputContent->clear();
 
-		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(fileListData->at(0).utf16());
+		const wchar_t* fileWString = reinterpret_cast<const wchar_t*>(fileListData->at(mkc::FIRST_ELEMENT).utf16());
 
 		// if has data
 		if (fileListData->size() == 1 && file->isFile()) {
@@ -169,6 +184,7 @@ void MKCompress::flushData()
 				launchFlag->forward = false;
 				launchFlag->changeHeaderAble = true;
 				// change header back mode
+				// TODO
 				if (*_getMKFileHeader(fileWString) == *SEVENZ_HEADER) {
 					// It can be compress
 					launchFlag->compressAble = true;
@@ -222,7 +238,7 @@ void MKCompress::flushData()
 
 void MKCompress::flushOutputPath() {
 	if (!fileListData->empty()) {
-		auto file = std::make_unique<QFileInfo>(fileListData->at(0));
+		auto file = std::make_unique<QFileInfo>(fileListData->at(mkc::FIRST_ELEMENT));
 		if (launchFlag->forward) {
 			// set output file name
 			if (launchFlag->compressAble) {
@@ -236,7 +252,8 @@ void MKCompress::flushOutputPath() {
 				}
 				else {
 					fileName = "";
-					qDebug() << tr("skip output file name");
+					// debug
+					// qDebug() << tr("skip output file name");
 					// ignor
 				}
 				ui.outPutFileNameContent->setText(fileName);
@@ -254,8 +271,6 @@ void MKCompress::flushOutputPath() {
 			// release dir space
 			delete dir.release();
 			dir = nullptr;
-
-			// TODO to get file name
 		}
 
 		delete file.release();
@@ -263,14 +278,6 @@ void MKCompress::flushOutputPath() {
 	}
 }
 void MKCompress::flushCheckBoxStatus() {
-	if (launchFlag->changeHeaderAble || launchFlag->compress) {
-		ui.isChangeHead->setCheckable(true);
-		ui.isChangeHead->setChecked(true);
-	}
-	else {
-		ui.isChangeHead->setChecked(false);
-		ui.isChangeHead->setCheckable(false);
-	}
 	if (launchFlag->compressAble) {
 		ui.isCompress->setCheckable(true);
 		if (launchFlag->changeHeaderAble) {
@@ -283,6 +290,15 @@ void MKCompress::flushCheckBoxStatus() {
 	else {
 		ui.isCompress->setChecked(false);
 		ui.isCompress->setCheckable(false);
+	}
+
+	if (launchFlag->changeHeaderAble || launchFlag->compress) {
+		ui.isChangeHead->setCheckable(true);
+		ui.isChangeHead->setChecked(true);
+	}
+	else {
+		ui.isChangeHead->setChecked(false);
+		ui.isChangeHead->setCheckable(false);
 	}
 
 	if (launchFlag->forward) {
@@ -370,6 +386,25 @@ void MKCompress::clearSeedsSlot()
 	flushData();
 }
 
+void MKCompress::outputMsg(QString msg)
+{
+	ui.outputContent->append(msg + tr("\n"));
+}
+
+void MKCompress::runComplate(bool flag, QString msg)
+{
+	isRunning = false;
+	QString result;
+	if (flag) {
+		result = tr("运行成功!");
+	}
+	else {
+		result = tr("运行失败!");
+	}
+
+	QMessageBox::warning(NULL, tr("MKCompress"), result + tr("\n\r") + msg);
+}
+
 void MKCompress::openDialog()
 {
 	auto fileDialog = std::make_unique<CFileDialog>();
@@ -380,8 +415,7 @@ void MKCompress::openDialog()
 		{
 			bool flag = true;
 
-			std::vector<QString>::const_iterator iterator;
-			for (iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
+			for (auto iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
 			{
 				if (*iterator == element) {
 					flag = false;
@@ -399,10 +433,16 @@ void MKCompress::openDialog()
 	fileDialog = NULL;
 }
 
-void MKCompress::launchCompress(bool flag, std::unique_ptr<std::vector<QString>, std::default_delete<std::vector<QString>>>& inputFileList, QString outputFile, QString pwd)
+void MKCompress::launch(mkc::MKCompressFlag* flag, std::vector<QString>* inputFileList, QString outputFile, QString pwd)
 {
-}
+	// debug
+	// outputFlag();
 
-void MKCompress::changeHeader(bool flag, QString path)
-{
+	auto threadLaunch = new MKCTExtend(flag, inputFileList, outputFile, pwd);
+
+	connect(threadLaunch, SIGNAL(sendMsg(QString)), this, SLOT(outputMsg(QString)));
+
+	connect(threadLaunch, SIGNAL(sendRunComplete(bool, QString)), this, SLOT(runComplate(bool, QString)));
+
+	threadLaunch->start();
 }

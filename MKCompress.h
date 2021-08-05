@@ -20,6 +20,8 @@ namespace mkc {
 		COMPRESS_AND_CHANGE_HEADER
 	};
 
+	constexpr int FIRST_ELEMENT = 0;
+
 	const QString MKC_TYPE = ".mkc";
 
 	const QString SEVENZ_TYPE = ".7z";
@@ -58,6 +60,18 @@ namespace mkc {
 		}
 		return data;
 	};
+
+	// QString to wstring
+	constexpr auto qStringToWString = [](const QString data) {
+		 return std::wstring(reinterpret_cast<const wchar_t*>(data.utf16()));
+	};
+
+	// flag of error
+	struct MKCompressResult 
+	{
+		bool error;
+		errno_t errValue;
+	};
 }
 
 class MKCompress : public QMainWindow
@@ -73,6 +87,8 @@ private:
 
 	char* MKC_HEADER;
 	char* SEVENZ_HEADER;
+
+	bool isRunning;
 
 	// launch flag
 	mkc::MKCompressFlag* launchFlag = new mkc::MKCompressFlag{ true, false, false, false, false, mkc::COMPRESS_MODE::DEFAULT };
@@ -96,24 +112,13 @@ private:
 	void flushData();
 
 	/// <summary>
-	/// To compress or decompress file
+	/// Launch main
 	/// </summary>
-	/// <param name="flag">To compress if flag is true,Or decompress</param>
-	/// <param name="inputFile">Input file path</param>
+	/// <param name="flag">the flag of launch</param>
+	/// <param name="inputFileList">Input files path</param>
 	/// <param name="outputFile">Output file path</param>
 	/// <param name="pwd">password</param>
-	void launchCompress(bool flag, std::unique_ptr<std::vector<QString>, std::default_delete<std::vector<QString>>>& inputFileList, QString outputFile, QString pwd);
-
-	/// <summary>
-	/// To change file header to or back
-	/// </summary>
-	/// <param name="flag">If is true it will be change header to;else it will change back</param>
-	/// <param name="path">File path</param>
-	void changeHeader(bool flag, QString path);
-	/*
-	char* getCharsMKC_HEAD();
-	char* getCharsSEVENZ_HEAD();
-	*/
+	void launch(mkc::MKCompressFlag* flag, std::vector<QString>* inputFileList, QString outputFile, QString pwd);
 
 	void flushCheckBoxStatus();
 
@@ -121,9 +126,24 @@ private:
 
 	void flushOutputPath();
 
+signals:
+	void send(QString message);
+
 private slots:
 	void openDialog();
 	void custumContextMenu(const QPoint& pos);
 	void deleteSeedSlot();
 	void clearSeedsSlot();
+	
+	/// <summary>
+	/// print message to output content
+	/// </summary>
+	void outputMsg(QString msg);
+
+	/// <summary>
+	/// flag to announcement
+	/// </summary>
+	/// <param name="flag">if true is complate</param>
+	/// <param name="msg">anothor message</param>
+	void runComplate(bool flag, QString msg);
 };
