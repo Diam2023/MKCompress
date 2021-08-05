@@ -13,6 +13,7 @@ class MKCTExtend :
 private:
 	mkc::MKCompressFlag* flag;
 	std::vector<QString>* inputFileList;
+	QString inputFile;
 	QString outputFile;
 	QString password;
 
@@ -62,7 +63,7 @@ signals:
 	/// </summary>
 	/// <param name="flag">if true is complate</param>
 	/// <param name="msg">output message</param>
-	void sendRunComplate(bool flag, QString msg);
+	void sendRunComplete(bool flag, QString msg);
 };
 
 #endif // !MKCTExtend
