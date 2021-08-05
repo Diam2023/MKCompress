@@ -61,6 +61,11 @@ namespace mkc {
 		return data;
 	};
 
+	// QString to wstring
+	constexpr auto qStringToWString = [](const QString data) {
+		 return std::wstring(reinterpret_cast<const wchar_t*>(data.utf16()));
+	};
+
 	// flag of error
 	struct MKCompressResult 
 	{

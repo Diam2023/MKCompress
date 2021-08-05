@@ -132,6 +132,13 @@ void MKCompress::init()
 				else {
 					opf = outputFilePath;
 				}
+				// input file equle output file
+				if ((fileListData->size() == 1) && fileListData->at(mkc::FIRST_ELEMENT) == opf) {
+					ui.outputContent->append(tr("输入无效!"));
+					QMessageBox::warning(NULL, tr("Warning"),
+						tr("输入无效!"), QMessageBox::Yes, QMessageBox::No);
+					return;
+				}
 				// wait to reconstruct
 				launch(launchFlag, fileListData.get(), opf, password);
 			}
@@ -177,6 +184,7 @@ void MKCompress::flushData()
 				launchFlag->forward = false;
 				launchFlag->changeHeaderAble = true;
 				// change header back mode
+				// TODO
 				if (*_getMKFileHeader(fileWString) == *SEVENZ_HEADER) {
 					// It can be compress
 					launchFlag->compressAble = true;
@@ -244,7 +252,8 @@ void MKCompress::flushOutputPath() {
 				}
 				else {
 					fileName = "";
-					qDebug() << tr("skip output file name");
+					// debug
+					// qDebug() << tr("skip output file name");
 					// ignor
 				}
 				ui.outPutFileNameContent->setText(fileName);
@@ -262,8 +271,6 @@ void MKCompress::flushOutputPath() {
 			// release dir space
 			delete dir.release();
 			dir = nullptr;
-
-			// TODO to get file name
 		}
 
 		delete file.release();
@@ -271,14 +278,6 @@ void MKCompress::flushOutputPath() {
 	}
 }
 void MKCompress::flushCheckBoxStatus() {
-	if (launchFlag->changeHeaderAble || launchFlag->compress) {
-		ui.isChangeHead->setCheckable(true);
-		ui.isChangeHead->setChecked(true);
-	}
-	else {
-		ui.isChangeHead->setChecked(false);
-		ui.isChangeHead->setCheckable(false);
-	}
 	if (launchFlag->compressAble) {
 		ui.isCompress->setCheckable(true);
 		if (launchFlag->changeHeaderAble) {
@@ -291,6 +290,15 @@ void MKCompress::flushCheckBoxStatus() {
 	else {
 		ui.isCompress->setChecked(false);
 		ui.isCompress->setCheckable(false);
+	}
+
+	if (launchFlag->changeHeaderAble || launchFlag->compress) {
+		ui.isChangeHead->setCheckable(true);
+		ui.isChangeHead->setChecked(true);
+	}
+	else {
+		ui.isChangeHead->setChecked(false);
+		ui.isChangeHead->setCheckable(false);
 	}
 
 	if (launchFlag->forward) {
@@ -393,6 +401,7 @@ void MKCompress::runComplate(bool flag, QString msg)
 	else {
 		result = tr("运行失败!");
 	}
+
 	QMessageBox::warning(NULL, tr("MKCompress"), result + tr("\n\r") + msg);
 }
 
@@ -406,8 +415,7 @@ void MKCompress::openDialog()
 		{
 			bool flag = true;
 
-			std::vector<QString>::const_iterator iterator;
-			for (iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
+			for (auto iterator = fileListData->begin(); iterator != fileListData->end(); iterator++)
 			{
 				if (*iterator == element) {
 					flag = false;
@@ -427,13 +435,14 @@ void MKCompress::openDialog()
 
 void MKCompress::launch(mkc::MKCompressFlag* flag, std::vector<QString>* inputFileList, QString outputFile, QString pwd)
 {
-	outputFlag();
+	// debug
+	// outputFlag();
 
 	auto threadLaunch = new MKCTExtend(flag, inputFileList, outputFile, pwd);
 
 	connect(threadLaunch, SIGNAL(sendMsg(QString)), this, SLOT(outputMsg(QString)));
 
-	connect(threadLaunch, SIGNAL(sendRunComplate(bool, QString)), this, SLOT(runComplate(bool, QString)));
+	connect(threadLaunch, SIGNAL(sendRunComplete(bool, QString)), this, SLOT(runComplate(bool, QString)));
 
 	threadLaunch->start();
 }
