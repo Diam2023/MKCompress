@@ -37,24 +37,24 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CFileDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="MKCompress.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MKCTExtend.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MixFileChooser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="CFileDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
     <QtMoc Include="MKCompress.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="MKCTExtend.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="MixFileChooser.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

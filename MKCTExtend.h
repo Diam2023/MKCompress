@@ -2,6 +2,7 @@
 
 #ifndef MKCTExtend
 
+#include <qthread.h>
 #include "stdafx.h"
 #include "MKCompress.h"
 
@@ -10,29 +11,10 @@ class MKCTExtend :
 {
     Q_OBJECT
 private:
-	/// <summary>
-	/// The flag of compress.
-	/// </summary>
 	mkc::MKCompressFlag* flag;
-
-	/// <summary>
-	/// Input file list.
-	/// </summary>
 	std::vector<QString>* inputFileList;
-
-	/// <summary>
-	/// File path of pre-step.
-	/// </summary>
 	QString inputFile;
-
-	/// <summary>
-	/// Last output file path.
-	/// </summary>
 	QString outputFile;
-
-	/// <summary>
-	/// Password of compress.
-	/// </summary>
 	QString password;
 
 public:

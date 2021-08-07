@@ -1,4 +1,5 @@
 #include "MKCTExtend.h"
+#include "MKCTDLL.hpp"
 
 MKCTExtend::MKCTExtend(mkc::MKCompressFlag* flag, std::vector<QString>* inputFileList, QString outputFile, QString password)
 {
@@ -21,10 +22,6 @@ void MKCTExtend::run()
 
 	if (flag->forward) {
 		if (flag->compress) {
-			delete compressResult;
-			compressResult = nullptr;
-
-			emit sendMsg(tr("准备压缩"));
 			compressResult = compress();
 			if (compressResult->error) {
 				emit sendRunComplete(!compressResult->error, tr(""));
@@ -40,10 +37,6 @@ void MKCTExtend::run()
 			}
 		}
 		if (flag->changeHeader) {
-			delete changeHeaderResult;
-			changeHeaderResult = nullptr;
-
-			emit sendMsg(tr("准备换头"));
 			changeHeaderResult = changeHeader();
 			if (changeHeaderResult->error) {
 				emit sendRunComplete(!changeHeaderResult->error, tr(""));
@@ -61,10 +54,6 @@ void MKCTExtend::run()
 	}
 	else {
 		if (flag->changeHeader) {
-			delete changeHeaderResult;
-			changeHeaderResult = nullptr;
-
-			emit sendMsg(tr("准备还原"));
 			changeHeaderResult = changeHeader();
 			if (changeHeaderResult->error) {
 				emit sendRunComplete(!changeHeaderResult->error, tr(""));
@@ -80,10 +69,6 @@ void MKCTExtend::run()
 			}
 		}
 		if (flag->compress) {
-			delete compressResult;
-			compressResult = nullptr;
-
-			emit sendMsg(tr("准备解压"));
 			compressResult = compress();
 			if (compressResult->error) {
 				emit sendRunComplete(!compressResult->error, tr(""));
@@ -109,9 +94,6 @@ void MKCTExtend::run()
 
 	delete compressResult;
 	delete changeHeaderResult;
-	compressResult = nullptr;
-	changeHeaderResult = nullptr;
-
 	exec();
 }
 
@@ -194,6 +176,7 @@ mkc::MKCompressResult* MKCTExtend::compress()
 	catch (const bit7z::BitException& ex)
 	{
 		// synchronize to conslot
+		qDebug() << ex.what();
 		emit sendMsg(ex.what());
 	}
 	return result;
@@ -234,6 +217,7 @@ mkc::MKCompressResult* MKCTExtend::changeHeader()
 		errno_t errValue;
 
 		// IMPORTANT
+
 		// add origin suffix to file
 		errValue = _pushLastBytes(outputFileWChar, suffix);
 		if (errValue != 0) {
@@ -295,17 +279,19 @@ mkc::MKCompressResult* MKCTExtend::changeHeader()
 		char* suffix;
 
 		// IMPORTANT
+
 		// change file header back
 		errValue = _changeHeaderBack(outputFileWChar);
+
+		// get last bytes
+		suffix = _popLatsBytes(outputFileWChar);
+
 
 		if (errValue != 0) {
 			result->error = true;
 			result->errValue = errValue;
 			emit sendMsg(tr("changeHeaderBack error: ") + QString::number(int(result->errValue)));
 		}
-
-		// get last bytes
-		suffix = _popLatsBytes(outputFileWChar);
 
 		QString opfFinal = dir->absoluteFilePath(opf->baseName()) + tr(".") + QString::QString(suffix);
 		if (!QFile::rename(opfTmp, opfFinal)) {

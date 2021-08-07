@@ -55,7 +55,6 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
@@ -68,8 +67,8 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>F:\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bit7z64_d.lib;MKCT_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>bit7z64_d.lib MKCT_d.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>bit7z64_d.lib;bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>bit7z64_d.lib bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <QtTranslation>
       <BuildAction>false</BuildAction>
@@ -82,15 +81,15 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>F:\project\MKCompress\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>bit7z64_d.lib;bit7z64.lib;MKCT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>bit7z64_d.lib bit7z64.lib MKCT.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UsePrecompiledHeader>Use</UsePrecompiledHeader>
@@ -110,7 +109,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <UsePrecompiledHeader>Use</UsePrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -124,13 +123,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtUic Include="MKCompress.ui" />
+    <ClCompile Include="CFileDialog.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtMoc Include="CFileDialog.h" />
     <ClInclude Include="include\MKCTDLL.hpp" />
     <QtMoc Include="MKCompress.h" />
     <QtMoc Include="MKCTExtend.h" />
-    <QtMoc Include="MixFileChooser.h" />
     <ClInclude Include="stdafx.h" />
-    <ClCompile Include="MixFileChooser.cpp" />
     <ClCompile Include="MKCompress.cpp" />
     <ClCompile Include="MKCTExtend.cpp" />
     <ClCompile Include="stdafx.cpp">
