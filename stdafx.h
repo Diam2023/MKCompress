@@ -12,8 +12,6 @@
 #include "bitarchiveinfo.hpp"
 #include "bitcompressor.hpp"
 
-#include "MKCTDLL.hpp"
-
 #include <iostream>
 #include <memory>
 #include <errno.h>
