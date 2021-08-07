@@ -1,6 +1,4 @@
 #include "MKCompress.h"
-#include "MKCTDLL.hpp"
-#include "CFileDialog.h"
 #include "MKCTExtend.h"
 
 using namespace bit7z;
@@ -407,7 +405,7 @@ void MKCompress::runComplate(bool flag, QString msg)
 
 void MKCompress::openDialog()
 {
-	auto fileDialog = std::make_unique<CFileDialog>();
+	auto fileDialog = std::make_unique<MixFileChooser>();
 
 	if (fileDialog->exec() == QDialog::Accepted)
 	{
