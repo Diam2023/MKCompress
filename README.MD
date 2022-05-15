@@ -26,23 +26,9 @@ It can mix folder and file to compress and auto save origin file name then the c
   - Qt Installer Framework
 
 
-<<<<<<< HEAD
-## verion
-- 1.0 added basics compose
-	- change header
-	- bit7z to compress files
-		- only cover 7z compress
-	- support encryption of compress
-=======
 ## Verion
-<<<<<<< HEAD
  - 1.0 added basics compose
    - change header
      - bit7z to compress files
        - only cover 7z compress
    - support encryption of compress
-=======
-  - 1.0 added basics compose
-    - change header
-    - compress
->>>>>>> full-compose
