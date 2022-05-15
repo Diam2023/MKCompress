@@ -1,6 +1,4 @@
 #include "MKCompress.h"
-#include "MKCTDLL.hpp"
-#include "CFileDialog.h"
 #include "MKCTExtend.h"
 
 using namespace bit7z;
@@ -21,9 +19,6 @@ MKCompress::MKCompress(QWidget* parent)
 
 MKCompress::~MKCompress()
 {
-	delete fileListData.release();
-	fileListData = NULL;
-
 	free(MKC_HEADER);
 	free(SEVENZ_HEADER);
 
@@ -118,9 +113,6 @@ void MKCompress::init()
 						// unique pointer
 						auto dir = std::make_unique<QDir>(outputFilePath);
 						opf = dir->absoluteFilePath(outputFileName);
-						// release dir space
-						delete dir.release();
-						dir = nullptr;
 					}
 					else {
 						ui.outputContent->append(tr("输入无效!"));
@@ -220,9 +212,6 @@ void MKCompress::flushData()
 		flushCheckBoxStatus();
 
 		flushOutputPath();
-
-		delete file.release();
-		file = NULL;
 	} // init check box
 	else {
 		ui.isChangeHead->setChecked(false);
@@ -268,13 +257,7 @@ void MKCompress::flushOutputPath() {
 			// set output file path
 			auto dir = std::make_unique<QDir>(file->absolutePath());
 			ui.outputPathContent->setText(dir->absoluteFilePath(file->baseName()));
-			// release dir space
-			delete dir.release();
-			dir = nullptr;
 		}
-
-		delete file.release();
-		file = NULL;
 	}
 }
 void MKCompress::flushCheckBoxStatus() {
@@ -407,7 +390,7 @@ void MKCompress::runComplate(bool flag, QString msg)
 
 void MKCompress::openDialog()
 {
-	auto fileDialog = std::make_unique<CFileDialog>();
+	auto fileDialog = std::make_unique<MixFileChooser>();
 
 	if (fileDialog->exec() == QDialog::Accepted)
 	{

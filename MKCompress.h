@@ -9,9 +9,9 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_MKCompress.h"
 #include "stdafx.h"
+#include "MixFileChooser.h"
 
 namespace mkc {
-
 	// To save soft run mode
 	enum class COMPRESS_MODE {
 		DEFAULT,
@@ -63,11 +63,11 @@ namespace mkc {
 
 	// QString to wstring
 	constexpr auto qStringToWString = [](const QString data) {
-		 return std::wstring(reinterpret_cast<const wchar_t*>(data.utf16()));
+		return std::wstring(reinterpret_cast<const wchar_t*>(data.utf16()));
 	};
 
 	// flag of error
-	struct MKCompressResult 
+	struct MKCompressResult
 	{
 		bool error;
 		errno_t errValue;
