@@ -160,8 +160,4 @@ void MKCompress::chooseFileDialog() {
 		// show file not found
 		ui.status->showMessage("该文件不存在!");
 	}
-
-	// release fileInfo
-	delete fileInfo.release();
-	fileInfo = nullptr;
 }
