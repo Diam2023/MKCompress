@@ -7,7 +7,7 @@
 ## change head and use 7z to compress files
 use bit7z and MKCY(miku change head tools)
  - bit7z https://github.com/rikyoz/bit7z
- - MKCT https://github.com/monoliths-uni/MKCT
+ - MKCT https://github.com/Diam2023/MKCT
 
 ## now bug list(bug will be erase on next version):
  - can not compress use chinese name fluter
